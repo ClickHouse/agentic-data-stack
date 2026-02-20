@@ -1,0 +1,53 @@
+# LibreChat Configuration File
+# For more information, see: https://www.librechat.ai/docs/configuration/librechat_yaml
+
+version: 1.3.1
+
+# Cache settings
+cache: true
+
+# Interface configuration
+interface:
+  fileCitations: true
+  
+  # MCP Servers configuration
+  # Controls user permissions for MCP (Model Context Protocol) server management
+  mcpServers:
+    use: true      # Allow users to use configured MCP servers
+    share: false    # Allow users to share MCP servers with other users
+    create: true   # Allow users to create and manage new MCP servers
+    public: false  # Allow users to share MCP servers publicly (with everyone)
+
+endpoints:
+  agents:
+    capabilities:
+      [
+        'hide_sequential_outputs',
+        'end_after_tools',
+        'execute_code',
+        'file_search',
+        'web_search',
+        'artifacts',
+        'actions',
+        'context',
+        'tools',
+        'chain',
+        'ocr',
+      ]
+  openAI:
+    fetch: true
+  
+  anthropic:
+    fetch: true
+  
+  google:
+    fetch: true
+
+
+mcpServers:
+  clickhouse-mcp:
+    type: streamable-http
+    url: http://clickhouse-mcp:8000/mcp
+    timeout: 60000  # 1 minute timeout
+    headers:
+      Authorization: 'Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}'

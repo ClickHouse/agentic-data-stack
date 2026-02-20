@@ -1,0 +1,17 @@
+# Environment variables (contains secrets)
+.env
+
+# Docker volumes and data
+*.log
+*.pid
+
+# OS files
+.DS_Store
+
+# IDE files
+.vscode/
+
+
+# Temporary files
+tmp/
+temp/

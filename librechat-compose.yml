@@ -1,0 +1,128 @@
+services:
+  librechat:
+    # image: ghcr.io/danny-avila/librechat-dev:latest
+    image: ghcr.io/danny-avila/lc-dev:latest
+    restart: always
+    ports:
+      - "${LIBRECHAT_PORT:-3080}:${LIBRECHAT_PORT:-3080}"
+    depends_on:
+      mongodb:
+        condition: service_started
+      meilisearch:
+        condition: service_started
+      clickhouse-mcp:
+        condition: service_healthy
+      rag_api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    environment:
+      - HOST=0.0.0.0
+      - PORT=${LIBRECHAT_PORT:-3080}
+      - MONGO_URI=mongodb://mongodb:27017/LibreChat
+      - MEILI_HOST=http://meilisearch:7700
+      - RAG_PORT=${RAG_PORT:-8000}
+      - RAG_API_URL=http://rag_api:${RAG_PORT:-8000}
+      # Load required LibreChat env vars
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - VECTORDB_DB=${VECTORDB_DB:-mydatabase}
+      - VECTORDB_USER=${VECTORDB_USER:-myuser}
+      - VECTORDB_PASSWORD=${VECTORDB_PASSWORD:-mypassword}
+      # Langfuse Integration - Tracing and Observability
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_INIT_PROJECT_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_INIT_PROJECT_SECRET_KEY}
+      - LANGFUSE_BASE_URL=http://langfuse-web:3000
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /app/.env
+      - type: bind
+        source: ./librechat.yaml
+        target: /app/librechat.yaml
+      - librechat_images:/app/client/public/images
+      - librechat_uploads:/app/uploads
+
+  librechat-user-init:
+    image: docker:27-cli
+    restart: "no"
+    depends_on:
+      librechat:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    environment:
+      - LANGFUSE_INIT_USER_EMAIL=${LANGFUSE_INIT_USER_EMAIL}
+      - LANGFUSE_INIT_USER_PASSWORD=${LANGFUSE_INIT_USER_PASSWORD}
+      - LANGFUSE_INIT_USER_NAME=${LANGFUSE_INIT_USER_NAME}
+      - LIBRECHAT_PORT=${LIBRECHAT_PORT:-3080}
+      - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-workos-2}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - type: bind
+        source: ./scripts/init-librechat-user.sh
+        target: /init-user.sh
+        read_only: true
+    working_dir: /
+    entrypoint: ["/bin/sh", "/init-user.sh"]
+
+  mongodb:
+    image: mongo:8.0.17
+    restart: always
+    volumes:
+      - librechat_mongodb_data:/data/db
+    command: mongod --noauth
+    ports:
+      - "127.0.0.1:27017:27017"  # Bind to localhost only
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12.3
+    restart: always
+    environment:
+      - MEILI_HOST=http://meilisearch:7700
+      - MEILI_NO_ANALYTICS=true
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+    volumes:
+      - librechat_meili_data:/meili_data
+    ports:
+      - "127.0.0.1:7700:7700"  # Bind to localhost only
+
+  vectordb:
+    image: pgvector/pgvector:0.8.0-pg15-trixie
+    restart: always
+    environment:
+      POSTGRES_DB: ${VECTORDB_DB:-mydatabase}
+      POSTGRES_USER: ${VECTORDB_USER:-myuser}
+      POSTGRES_PASSWORD: ${VECTORDB_PASSWORD:-mypassword}
+    volumes:
+      - librechat_vectordb_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"  # Different port than Langfuse's postgres (5432)
+
+  # RAG API service for file uploads and retrieval
+  rag_api:
+    image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
+    restart: always
+    environment:
+      - DB_HOST=vectordb
+      - RAG_PORT=${RAG_PORT:-8000}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      vectordb:
+        condition: service_started
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${RAG_PORT:-8001}:${RAG_PORT:-8000}"
+
+volumes:
+  librechat_mongodb_data:
+  librechat_meili_data:
+  librechat_vectordb_data:
+  librechat_images:
+  librechat_uploads:

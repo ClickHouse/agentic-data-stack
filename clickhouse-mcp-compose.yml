@@ -1,0 +1,30 @@
+# ClickHouse MCP Service
+# This service provides Model Context Protocol access to ClickHouse
+# It connects to the ClickHouse instance from langfuse-compose.yml
+
+services:
+  clickhouse-mcp:
+    image: mcp/clickhouse
+    restart: always
+    depends_on:
+      clickhouse:
+        condition: service_healthy  # References clickhouse service from langfuse-compose.yml
+    environment:
+      # Connect to ClickHouse service from Langfuse
+      CLICKHOUSE_HOST: clickhouse  # Service name, not localhost!
+      CLICKHOUSE_PORT: 8123        # HTTP protocol port (9000 is for native protocol)
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-clickhouse}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}  # Shared from Langfuse .env
+      CLICKHOUSE_SECURE: "false"
+      CLICKHOUSE_MCP_SERVER_TRANSPORT: "http"
+      CLICKHOUSE_MCP_BIND_HOST: "0.0.0.0"  # Bind to all interfaces for container networking
+      CLICKHOUSE_MCP_BIND_PORT: "8000"
+      CLICKHOUSE_MCP_AUTH_TOKEN: ${CLICKHOUSE_MCP_AUTH_TOKEN:-}
+    ports:
+      - "127.0.0.1:8000:8000"  # Expose MCP HTTP endpoint on localhost only
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import socket; s=socket.create_connection(('localhost',8000),2); s.close()\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
