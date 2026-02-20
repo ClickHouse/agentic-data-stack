@@ -31,35 +31,29 @@ This project runs a fully self-hosted agentic analytics environment with Docker 
 
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose v2+
 
-### 1. Generate credentials
+### 1. Prepare the environment
 
 ```bash
-./scripts/generate-env.sh
+./scripts/prepare-demo.sh
 ```
 
-This is your fastest way to get started with the Agentic Data Stack. It creates a `.env` file with randomly generated passwords, keys, and secrets for all services. You can customize the initial settings with environment variables before running:
+This is your fastest way to get started with the Agentic Data Stack. It generates a `.env` file with random credentials for all services, then presents an interactive menu to optionally configure API keys for OpenAI, Anthropic, and/or Google. Any providers you skip will remain as `user_provided`, letting users enter their own keys in the LibreChat UI.
+
+You can also generate credentials separately and customize the initial administrator account credentials:
 
 ```bash
 USER_EMAIL="you@example.com" USER_PASSWORD="supersecret" USER_NAME="YourName" ./scripts/generate-env.sh
 ```
 
-### 2. Configure API keys
+Learn more about configuring your LibreChat instance at https://librechat.ai/docs.
 
-Edit your `.env` and set LLM providers, models, and their API keys, or leave them as `user_provided` to let users enter their own keys in the LibreChat UI (learn more on how to configure your LibreChat instance at https://librechat.ai/docs):
-
-```
-ANTHROPIC_API_KEY=user_provided
-GOOGLE_KEY=user_provided
-OPENAI_API_KEY=user_provided
-```
-
-### 3. Start the stack
+### 2. Start the stack
 
 ```bash
 docker compose up -d
 ```
 
-### 4. Access the services
+### 3. Access the services
 
 - **LibreChat** — [http://localhost:3080](http://localhost:3080)
 - **Langfuse** — [http://localhost:3000](http://localhost:3000)
@@ -69,19 +63,7 @@ An admin user is created automatically on first startup using the credentials fr
 
 ## Architecture
 
-```
-┌─────────────┐     ┌──────────────────┐     ┌──────────────┐
-│  LibreChat   │────▶│  ClickHouse MCP  │────▶│  ClickHouse  │
-│  (Chat UI)   │     │  (MCP Server)    │     │  (Analytics)  │
-└──────┬───────┘     └──────────────────┘     └──────────────┘
-       │
-       │ traces
-       ▼
-┌──────────────┐
-│   Langfuse   │
-│ (Observability)│
-└──────────────┘
-```
+![Architecture](assets/architecture.png)
 
 LibreChat connects to ClickHouse through the MCP server, allowing AI agents to query and analyze your data. All LLM interactions are traced in Langfuse for observability, evaluation, and prompt management.
 
@@ -89,6 +71,7 @@ LibreChat connects to ClickHouse through the MCP server, allowing AI agents to q
 
 | Script | Description |
 |---|---|
+| `scripts/prepare-demo.sh` | Generate `.env` and interactively configure API keys |
 | `scripts/generate-env.sh` | Generate `.env` with random credentials |
 | `scripts/reset-all.sh` | Stop all containers and wipe all data/volumes |
 | `scripts/create-librechat-user.sh` | Manually create a LibreChat admin user |
@@ -111,10 +94,10 @@ To tear down all containers and delete all data:
 ./scripts/reset-all.sh
 ```
 
-Then regenerate credentials and start fresh:
+Then set up again and start fresh:
 
 ```bash
-./scripts/generate-env.sh
+./scripts/prepare-demo.sh
 docker compose up -d
 ```
 
