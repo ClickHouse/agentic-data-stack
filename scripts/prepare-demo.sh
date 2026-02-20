@@ -100,7 +100,7 @@ multiselect() {
 echo "=== API Key Configuration ==="
 echo ""
 echo "  Select which providers to configure with API keys."
-echo "  Unchecked providers environemnt variables not modified."
+echo "  Unchecked providers environment variables not modified."
 echo ""
 echo "  ↑/↓ to navigate · Space to toggle · Enter to confirm"
 
