@@ -117,6 +117,9 @@ if [ ${#SELECTED[@]} -eq 0 ]; then
     echo "  No providers selected — API key environment variables not modified."
     echo ""
     echo "✅ Demo environment is ready!"
+    echo ""
+    echo "  Run 'docker compose up -d' to get started."
+    echo ""
     exit 0
 fi
 
@@ -159,4 +162,6 @@ for i in "${!PROVIDERS[@]}"; do
         echo "    - ${PROVIDERS[$i]}  (user_provided)"
     fi
 done
+echo ""
+echo "  Run 'docker compose up -d' to get started."
 echo ""
