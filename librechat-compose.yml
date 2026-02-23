@@ -111,6 +111,9 @@ services:
     environment:
       - DB_HOST=vectordb
       - RAG_PORT=${RAG_PORT:-8000}
+      - POSTGRES_DB=${VECTORDB_DB:-mydatabase}
+      - POSTGRES_USER=${VECTORDB_USER:-myuser}
+      - POSTGRES_PASSWORD=${VECTORDB_PASSWORD:-mypassword}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     depends_on:
       vectordb:
