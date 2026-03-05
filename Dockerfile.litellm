@@ -1,0 +1,9 @@
+FROM python:3.11-slim
+# Install LiteLLM and dependencies
+RUN pip install --no-cache-dir litellm uvicorn fastapi python-dotenv boto3
+# Create app directory
+WORKDIR /app
+# Expose port
+EXPOSE 8000
+# Default command to run LiteLLM proxy
+CMD ["litellm", "--model", "bedrock/eu.anthropic.claude-sonnet-4-5-20250929-v1:0", "--port", "8000"]

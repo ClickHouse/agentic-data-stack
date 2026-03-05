@@ -13,9 +13,10 @@ This project runs a fully self-hosted agentic analytics environment with Docker 
 
 | Component | Purpose | Port |
 |---|---|---|
-| **LibreChat** | Modern Chat UI with multi-model / provider support (OpenAI, Anthropic, Google) | `3080` |
+| **LibreChat** | Modern Chat UI with multi-model / provider support (OpenAI, Anthropic, Google, AWS Bedrock) | `3080` |
 | **ClickHouse MCP** | MCP server that gives agents access to ClickHouse | `8000` |
 | **Langfuse** | LLM observability — traces, evals, prompt management | `3000` |
+| **LiteLLM** | OpenAI-compatible proxy for AWS Bedrock and other LLM providers | `8002` |
 | **ClickHouse** | World's fastest analytical database | `8123` |
 | **PostgreSQL** | Transactional database for Langfuse | `5432` |
 | **MongoDB** | Transactional database for LibreChat | `27017` |
@@ -48,6 +49,9 @@ USER_EMAIL="you@example.com" USER_PASSWORD="supersecret" USER_NAME="YourName" ./
 Learn more about configuring your LibreChat instance at https://librechat.ai/docs.
 
 > **Note:** To use LibreChat's **file search / RAG** features, the RAG API needs a real API key for embeddings — `user_provided` won't work because the RAG API calls the embeddings endpoint directly. If `OPENAI_API_KEY` is set to `user_provided`, set `RAG_OPENAI_API_KEY` to a valid OpenAI key (it overrides `OPENAI_API_KEY` for RAG only). You can also switch embedding providers via `EMBEDDINGS_PROVIDER` (`openai`, `azure`, `huggingface`, `huggingfacetei`, `ollama`). See the [RAG API docs](https://librechat.ai/docs/configuration/rag_api) for details.
+
+> **AWS Bedrock (Optional):** This stack supports AWS Bedrock through LiteLLM, an OpenAI-compatible proxy. To use Bedrock, configure your AWS credentials and Bedrock parameters in `.env`. See [AWS_BEDROCK_SETUP.md](AWS_BEDROCK_SETUP.md) for detailed instructions.
+
 
 ### 2. Start the stack
 
@@ -83,10 +87,12 @@ LibreChat connects to ClickHouse through the MCP server, allowing AI agents to q
 
 - **LibreChat** — `librechat.yaml` configures endpoints, MCP servers, and agent capabilities
 - **Environment** — `.env` holds all credentials and service configuration (see `.env.example` for reference)
-- **Docker** — `docker-compose.yml` includes the three compose files:
+- **Docker** — `docker-compose.yml` includes the four compose files:
   - `langfuse-compose.yml` — Langfuse, ClickHouse, PostgreSQL, Redis, MinIO
   - `clickhouse-mcp-compose.yml` — ClickHouse MCP server
+  - `litellm-compose.yml` — LiteLLM proxy for AWS Bedrock (optional)
   - `librechat-compose.yml` — LibreChat, MongoDB, Meilisearch, pgvector, RAG API
+- **AWS Bedrock Setup** — See [AWS_BEDROCK_SETUP.md](AWS_BEDROCK_SETUP.md) for detailed configuration instructions
 
 ## Reset Everything
 
