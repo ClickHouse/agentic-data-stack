@@ -10,7 +10,7 @@
 
 # IDE files
 .vscode/
-
+.idea/
 
 # Temporary files
 tmp/

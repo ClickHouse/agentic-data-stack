@@ -1,0 +1,69 @@
+# LiteLLM Configuration File
+# Maps model names and configures AWS Bedrock backend
+# See: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+  - model_name: "bedrock-claude"
+    litellm_params:
+      model: "bedrock/eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
+      api_base: null
+      timeout: 60
+      max_tokens: 500
+      temperature: 0.7
+    model_info:
+      description: "AWS Bedrock - Anthropic Claude Sonnet 4.5"
+      pricing:
+        input_cost_per_token: 0.000003
+        output_cost_per_token: 0.000015
+
+  - model_name: "bedrock-claude-opus"
+    litellm_params:
+      model: "bedrock/eu.anthropic.claude-opus-4-1-20250805-v1:0"
+      timeout: 60
+      max_tokens: 500
+      temperature: 0.7
+    model_info:
+      description: "AWS Bedrock - Anthropic Claude Opus"
+      pricing:
+        input_cost_per_token: 0.000015
+        output_cost_per_token: 0.000075
+
+  - model_name: "bedrock-claude-haiku"
+    litellm_params:
+      model: "bedrock/eu.anthropic.claude-haiku-3-5-sonnet-20241022-v1:0"
+      timeout: 30
+      max_tokens: 500
+      temperature: 0.7
+    model_info:
+      description: "AWS Bedrock - Anthropic Claude Haiku 3.5"
+      pricing:
+        input_cost_per_token: 0.00000025
+        output_cost_per_token: 0.00000125
+
+router_settings:
+  # Router configuration for load balancing and fallback
+  enable_load_balancing: false
+  enable_cooldowns: true
+  cooldown_time: 0  # No cooldown
+
+# Proxy settings
+general_settings:
+  # Logging
+  log_verbose: true
+  log_level: "DEBUG"
+
+  # Proxy behavior
+  enable_cors: true
+  cors_allow_origins: ["*"]
+
+  # Use Langfuse for tracing
+  use_langfuse: true
+
+  # API key settings
+  disable_request_timeout: false
+
+# Health check settings
+health_check:
+  endpoint: "/health"
+  model_list:
+    - "bedrock-claude"

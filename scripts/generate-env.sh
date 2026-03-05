@@ -180,6 +180,38 @@ ANTHROPIC_API_KEY=user_provided
 GOOGLE_KEY=user_provided
 OPENAI_API_KEY=user_provided
 
+# ============================================
+# LiteLLM Configuration (Optional)
+# ============================================
+# LiteLLM provides OpenAI-compatible proxy for AWS Bedrock and other LLM providers
+LITELLM_PORT=8002
+
+# ============================================
+# AWS Bedrock Configuration (Optional)
+# ============================================
+# AWS credentials - can be set via AWS_PROFILE or explicit credentials
+SRV_BEDROCK_AWS_PROFILE=${SRV_BEDROCK_AWS_PROFILE:-dev1}
+AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+
+# AWS Bedrock region (e.g., eu-west-3, us-east-1)
+SRV_BEDROCK_REGION=${SRV_BEDROCK_REGION:-eu-west-3}
+
+# Bedrock model ID (full ARN path)
+# Examples:
+#   - eu.anthropic.claude-sonnet-4-5-20250929-v1:0
+#   - eu.anthropic.claude-opus-4-1-20250805-v1:0
+#   - eu.anthropic.claude-haiku-3-5-sonnet-20241022-v1:0
+SRV_BEDROCK_MODEL_ID=${SRV_BEDROCK_MODEL_ID:-eu.anthropic.claude-sonnet-4-5-20250929-v1:0}
+
+# Bedrock Anthropic version
+SRV_BEDROCK_ANTHROPIC_VERSION=${SRV_BEDROCK_ANTHROPIC_VERSION:-bedrock-2023-05-31}
+
+# Model parameters
+SRV_BEDROCK_MAX_TOKENS=${SRV_BEDROCK_MAX_TOKENS:-500}
+SRV_BEDROCK_TEMPERATURE=${SRV_BEDROCK_TEMPERATURE:-0.7}
+SRV_BEDROCK_MESSAGE_ROLE=${SRV_BEDROCK_MESSAGE_ROLE:-user}
+
 EOF
 
 echo ""
@@ -196,6 +228,7 @@ echo "   - Langfuse salt"
 echo "   - Langfuse API keys"
 echo "   - Initial user credentials (preset)"
 echo "   - ClickHouse MCP auth token"
+echo "   - LiteLLM & AWS Bedrock configuration"
 echo ""
 echo "👤 Preset User Credentials:"
 echo "   Email: ${USER_EMAIL}"
@@ -211,6 +244,14 @@ echo "💬 LibreChat will be available at: http://localhost:${LIBRECHAT_PORT}"
 echo "   MongoDB: localhost:27017"
 echo "   Meilisearch: localhost:7700"
 echo "   VectorDB: localhost:5433"
+echo ""
+echo "🚀 LiteLLM (AWS Bedrock) will be available at: http://litellm:8000"
+echo "   Configured models:"
+echo "     - bedrock-claude (Claude Sonnet 4.5)"
+echo "     - bedrock-claude-opus (Claude Opus 4.1)"
+echo "     - bedrock-claude-haiku (Claude Haiku 3.5)"
+echo "   Region: ${SRV_BEDROCK_REGION}"
+echo "   Model ID: ${SRV_BEDROCK_MODEL_ID}"
 echo ""
 echo "📝 LibreChat Initial User (same as Langfuse)"
 echo "   Email: ${USER_EMAIL}"

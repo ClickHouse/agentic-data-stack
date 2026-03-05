@@ -1,0 +1,49 @@
+# LiteLLM Proxy Configuration
+# Provides OpenAI-compatible endpoint for AWS Bedrock and other LLM providers
+# See: https://docs.litellm.ai/
+
+services:
+  litellm:
+    image: docker.litellm.ai/berriai/litellm:main-latest
+    restart: always
+    command: ["--config", "/app/config.yaml", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${LITELLM_PORT:-8002}:8000"
+    environment:
+      # Core LiteLLM Configuration
+      - LITELLM_LOG=DEBUG
+      - LITELLM_LOCAL_MODEL_COST_MAP=True
+
+      # AWS Bedrock Configuration
+      - AWS_REGION_NAME=${SRV_BEDROCK_REGION:-eu-west-3}
+      - AWS_PROFILE=${SRV_BEDROCK_AWS_PROFILE:-dev1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SDK_LOAD_CONFIG=1
+
+      # Model Configuration for Bedrock
+      - BEDROCK_MODEL_ID=${SRV_BEDROCK_MODEL_ID:-eu.anthropic.claude-sonnet-4-5-20250929-v1:0}
+      - BEDROCK_ANTHROPIC_VERSION=${SRV_BEDROCK_ANTHROPIC_VERSION:-bedrock-2023-05-31}
+      - BEDROCK_MAX_TOKENS=${SRV_BEDROCK_MAX_TOKENS:-500}
+      - BEDROCK_TEMPERATURE=${SRV_BEDROCK_TEMPERATURE:-0.7}
+
+      # Langfuse Integration (optional, for observability)
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_INIT_PROJECT_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_INIT_PROJECT_SECRET_KEY:-}
+      - LANGFUSE_BASE_URL=http://langfuse-web:3000
+
+      # OpenAI-compatible endpoint defaults
+      - OPENAI_API_KEY=sk-litellm-default-key
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml:ro
+      - ${HOME}/.aws:/root/.aws
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - langfuse-web
+    networks:
+      - default

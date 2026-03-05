@@ -9,7 +9,7 @@ cache: true
 # Interface configuration
 interface:
   fileCitations: true
-  
+
   # MCP Servers configuration
   # Controls user permissions for MCP (Model Context Protocol) server management
   mcpServers:
@@ -36,13 +36,26 @@ endpoints:
       ]
   openAI:
     fetch: true
-  
+
   anthropic:
     fetch: true
-  
+
   google:
     fetch: true
 
+  custom:
+    - name: "AWS Bedrock (via LiteLLM)"
+      apiKey: "sk-litellm-default-key"
+      baseURL: "http://litellm:8000/v1"
+      models:
+        default:
+          - bedrock-claude
+          - bedrock-claude-opus
+          - bedrock-claude-haiku
+        bedrock-claude: {}
+        bedrock-claude-opus: {}
+        bedrock-claude-haiku: {}
+      fetch: false
 
 mcpServers:
   clickhouse-mcp:
