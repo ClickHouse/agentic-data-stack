@@ -1,7 +1,6 @@
 services:
   librechat:
-    # image: ghcr.io/danny-avila/librechat-dev:latest
-    image: ghcr.io/danny-avila/lc-dev:latest
+    image: ghcr.io/danny-avila/librechat:latest
     restart: always
     ports:
       - "${LIBRECHAT_PORT:-3080}:${LIBRECHAT_PORT:-3080}"
