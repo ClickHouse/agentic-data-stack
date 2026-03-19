@@ -7,9 +7,9 @@ set -e
 
 echo "Creating LibreChat admin user..."
 
-# Load .env file to read Langfuse credentials
+# Load .env file to read credentials
 if [ -f .env ]; then
-    export $(grep -v '^#' .env | grep -E '^(LANGFUSE_INIT_USER_EMAIL|LANGFUSE_INIT_USER_PASSWORD|LANGFUSE_INIT_USER_NAME)=' | xargs)
+    export $(grep -v '^#' .env | grep -E '^(LANGFUSE_INIT_USER_EMAIL|LANGFUSE_INIT_USER_PASSWORD|LANGFUSE_INIT_USER_NAME|MONGO_USER|MONGO_PASSWORD)=' | xargs)
 fi
 
 # Read credentials from .env - reuse Langfuse user credentials
@@ -60,8 +60,11 @@ docker compose exec -T librechat npm run create-user \
 # Make the user an admin by updating MongoDB directly
 echo ""
 echo "Setting user as admin..."
-# docker compose exec uses service names
-docker compose exec -T mongodb mongosh LibreChat --eval "
+MONGO_AUTH_ARGS=""
+if [ -n "$MONGO_USER" ] && [ -n "$MONGO_PASSWORD" ]; then
+    MONGO_AUTH_ARGS="-u ${MONGO_USER} -p ${MONGO_PASSWORD} --authenticationDatabase admin"
+fi
+docker compose exec -T mongodb mongosh LibreChat ${MONGO_AUTH_ARGS} --eval "
 db.users.updateOne(
   { email: '${LIBRECHAT_USER_EMAIL}' },
   { \$set: { role: 'ADMIN' } }

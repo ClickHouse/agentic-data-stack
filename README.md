@@ -25,7 +25,15 @@ This project runs a fully self-hosted agentic analytics environment with Docker 
 | **pgvector** | Vector database for RAG | `5433` |
 | **RAG API** | Retrieval-augmented generation service for LibreChat | `8001` |
 
-## Quick Start
+## Deploy on Railway (no Docker required)
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/YOUR_TEMPLATE_ID)
+
+> **Note:** Replace `YOUR_TEMPLATE_ID` above once you've published the template on Railway.
+
+Click the button to deploy the full stack to [Railway](https://railway.com). Each deployment creates your own private instance with auto-generated credentials. You'll be prompted to enter API keys for your LLM providers (OpenAI, Anthropic, Google) — or skip them and enter keys later in the LibreChat UI.
+
+## Quick Start (Docker)
 
 ### Prerequisites
 

@@ -12,6 +12,7 @@ POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 CLICKHOUSE_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 REDIS_AUTH=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 MINIO_ROOT_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
+MONGO_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 
 # Generate Langfuse-specific keys
 ENCRYPTION_KEY=$(openssl rand -hex 32)
@@ -68,6 +69,13 @@ LIBRECHAT_USER_NAME=${LANGFUSE_INIT_USER_NAME}
 # ClickHouse user (default is 'clickhouse' per Langfuse config)
 CLICKHOUSE_USER=${CLICKHOUSE_USER:-clickhouse}
 
+# MongoDB user (default is 'librechat')
+MONGO_USER=${MONGO_USER:-librechat}
+
+# LibreChat encryption keys
+CREDS_KEY=$(openssl rand -hex 32)
+CREDS_IV=$(openssl rand -hex 16)
+
 # Write to .env file
 cat > .env << EOF
 # Auto-generated credentials - $(date)
@@ -90,6 +98,12 @@ CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
 # ClickHouse MCP Configuration
 # ============================================
 CLICKHOUSE_MCP_AUTH_TOKEN=${CLICKHOUSE_MCP_AUTH_TOKEN}
+
+# ============================================
+# MongoDB Configuration
+# ============================================
+MONGO_USER=${MONGO_USER}
+MONGO_PASSWORD=${MONGO_PASSWORD}
 
 # ============================================
 # Redis Configuration
@@ -172,8 +186,8 @@ LIBRECHAT_USER_NAME=${USER_NAME}
 # LibreChat Encryption Keys (required for encrypting user API keys)
 # CREDS_KEY: 64-character hex string (32 bytes) for AES-256 encryption
 # CREDS_IV: 32-character hex string (16 bytes) for AES-CBC initialization vector
-CREDS_KEY=$(openssl rand -hex 32)
-CREDS_IV=$(openssl rand -hex 16)
+CREDS_KEY=${CREDS_KEY}
+CREDS_IV=${CREDS_IV}
 
 # LibreChat API Keys - Set to "user_provided" to allow users to configure their own keys in the UI
 ANTHROPIC_API_KEY=user_provided
@@ -194,6 +208,7 @@ echo "   - Langfuse encryption key"
 echo "   - Langfuse NextAuth secret"
 echo "   - Langfuse salt"
 echo "   - Langfuse API keys"
+echo "   - MongoDB password"
 echo "   - Initial user credentials (preset)"
 echo "   - ClickHouse MCP auth token"
 echo ""

@@ -43,7 +43,12 @@ sleep 3
 
 # Check if user already exists
 echo "Checking if user already exists..."
-USER_EXISTS=$(docker exec ${MONGODB_CONTAINER} mongosh LibreChat --quiet --eval "
+MONGO_AUTH_ARGS=""
+if [ -n "$MONGO_USER" ] && [ -n "$MONGO_PASSWORD" ]; then
+    MONGO_AUTH_ARGS="-u ${MONGO_USER} -p ${MONGO_PASSWORD} --authenticationDatabase admin"
+fi
+
+USER_EXISTS=$(docker exec ${MONGODB_CONTAINER} mongosh LibreChat ${MONGO_AUTH_ARGS} --quiet --eval "
 db.users.countDocuments({ email: '${LIBRECHAT_USER_EMAIL}' })
 " 2>/dev/null | tail -n 1 | tr -d '[:space:]' || echo "0")
 
@@ -73,7 +78,7 @@ echo "Y" | docker exec -i ${LIBRECHAT_CONTAINER} npm run create-user \
 # Make the user an admin
 echo ""
 echo "Setting user as admin..."
-docker exec ${MONGODB_CONTAINER} mongosh LibreChat --quiet --eval "
+docker exec ${MONGODB_CONTAINER} mongosh LibreChat ${MONGO_AUTH_ARGS} --quiet --eval "
 db.users.updateOne(
   { email: '${LIBRECHAT_USER_EMAIL}' },
   { \$set: { role: 'ADMIN' } }

@@ -22,7 +22,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=${LIBRECHAT_PORT:-3080}
-      - MONGO_URI=mongodb://mongodb:27017/LibreChat
+      - MONGO_URI=mongodb://${MONGO_USER:-librechat}:${MONGO_PASSWORD}@mongodb:27017/LibreChat?authSource=admin
       - MEILI_HOST=http://meilisearch:7700
       - RAG_PORT=${RAG_PORT:-8000}
       - RAG_API_URL=http://rag_api:${RAG_PORT:-8000}
@@ -61,6 +61,8 @@ services:
       - LANGFUSE_INIT_USER_NAME=${LANGFUSE_INIT_USER_NAME}
       - LIBRECHAT_PORT=${LIBRECHAT_PORT:-3080}
       - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-workos-2}
+      - MONGO_USER=${MONGO_USER:-librechat}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - type: bind
@@ -73,9 +75,11 @@ services:
   mongodb:
     image: mongo:8.0.17
     restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-librechat}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - librechat_mongodb_data:/data/db
-    command: mongod --noauth
     ports:
       - "127.0.0.1:27017:27017"  # Bind to localhost only
 
