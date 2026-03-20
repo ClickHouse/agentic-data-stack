@@ -45,9 +45,18 @@ endpoints:
 
 
 mcpServers:
-  clickhouse-mcp:
+  clickhouse-local:
+    title: "ClickHouse (Local)"
+    description: "Query the ClickHouse instance bundled with this stack"
     type: streamable-http
     url: ${CLICKHOUSE_MCP_URL}
-    timeout: 60000  # 1 minute timeout
+    timeout: 60000
     headers:
-      Authorization: 'Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}'
+      Authorization: "Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}"
+  clickhouse-cloud:
+    title: "ClickHouse Cloud"
+    description: "Connect to your ClickHouse Cloud service (requires ClickHouse Cloud account)"
+    type: streamable-http
+    url: https://mcp.clickhouse.cloud/mcp
+    requiresOAuth: true
+    timeout: 60000
