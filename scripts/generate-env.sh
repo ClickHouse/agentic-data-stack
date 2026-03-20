@@ -98,6 +98,7 @@ CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
 # ClickHouse MCP Configuration
 # ============================================
 CLICKHOUSE_MCP_AUTH_TOKEN=${CLICKHOUSE_MCP_AUTH_TOKEN}
+CLICKHOUSE_MCP_URL=http://clickhouse-mcp:8000/mcp
 
 # ============================================
 # MongoDB Configuration
