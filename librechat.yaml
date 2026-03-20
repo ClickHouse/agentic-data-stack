@@ -46,7 +46,7 @@ endpoints:
 
 mcpServers:
   clickhouse-local:
-    title: "ClickHouse (Local)"
+    title: "ClickHouse Local"
     description: "Query the ClickHouse instance bundled with this stack"
     type: streamable-http
     url: ${CLICKHOUSE_MCP_URL}
