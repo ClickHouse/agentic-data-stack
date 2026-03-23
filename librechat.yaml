@@ -47,7 +47,7 @@ endpoints:
 mcpServers:
   clickhouse-mcp:
     type: streamable-http
-    url: http://clickhouse-mcp:8000/mcp
+    url: https://mcp.clickhouse.cloud/mcp
     timeout: 60000  # 1 minute timeout
     headers:
       Authorization: 'Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}'
