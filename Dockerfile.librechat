@@ -1,0 +1,6 @@
+FROM ghcr.io/danny-avila/librechat:latest
+
+COPY librechat.yaml /app/librechat.yaml
+COPY --chmod=755 scripts/railway-init.sh /app/railway-init.sh
+
+CMD ["/bin/sh", "/app/railway-init.sh"]
