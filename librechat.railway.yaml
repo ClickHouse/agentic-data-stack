@@ -18,8 +18,9 @@ interface:
     create: true   # Allow users to create and manage new MCP servers
     public: false  # Allow users to share MCP servers publicly (with everyone)
 
-allowedDomains:
-  - "*.railway.internal"
+mcpSettings:
+  allowedDomains:
+    - "*.railway.internal"
 
 endpoints:
   agents:
