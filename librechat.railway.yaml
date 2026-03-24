@@ -38,20 +38,29 @@ endpoints:
         'chain',
         'ocr',
       ]
-  openAI:
-    fetch: true
-  
-  anthropic:
-    fetch: true
-  
-  google:
-    fetch: true
-
 
 mcpServers:
   clickhouse-mcp:
     type: streamable-http
     url: http://clickhouse-mcp-server.railway.internal:8000/mcp
-    timeout: 60000  # 1 minute timeout
+    timeout: 60000
     headers:
       Authorization: 'Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}'
+  clickhouse:
+    command: "uv"
+    args:
+      - run
+      - --with
+      - mcp-clickhouse==0.1.5
+      - --python
+      - "3.13"
+      - mcp-clickhouse
+    env:
+      CLICKHOUSE_HOST: "sql-clickhouse.clickhouse.com"
+      CLICKHOUSE_PORT: "8443"
+      CLICKHOUSE_USER: "demo"
+      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_SECURE: "true"
+      CLICKHOUSE_VERIFY: "true"
+      CLICKHOUSE_CONNECT_TIMEOUT: "30"
+      CLICKHOUSE_SEND_RECEIVE_TIMEOUT: "30"
