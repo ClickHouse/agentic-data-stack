@@ -50,13 +50,13 @@ mcpSettings:
     - "host.docker.internal" # Docker host access (required for Docker setups)
 
 mcpServers:
-  Clickhouse Local:
+  ClickHouse-Local:
     type: streamable-http
     url: http://clickhouse-mcp:8000/mcp
     timeout: 60000 # 1 minute timeout
     headers:
       Authorization: "Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}"
-  Clickhouse Cloud:
+  ClickHouse-Cloud:
     type: streamable-http
     url: https://mcp.clickhouse.cloud/mcp
     timeout: 60000 # 1 minute timeout
