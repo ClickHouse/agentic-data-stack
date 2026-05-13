@@ -44,6 +44,10 @@ VECTORDB_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 JWT_SECRET=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 JWT_REFRESH_SECRET=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 
+# Generate Admin Panel session secret (must be at least 32 chars)
+ADMIN_PANEL_PORT=${ADMIN_PANEL_PORT:-3081}
+ADMIN_PANEL_SESSION_SECRET=$(openssl rand -hex 32)
+
 # # Prompt for user email or use default
 # read -p "Enter initial Langfuse user email (default: admin@example.com): " USER_EMAIL
 # USER_EMAIL=${USER_EMAIL:-admin@example.com}
@@ -180,6 +184,12 @@ ANTHROPIC_API_KEY=user_provided
 GOOGLE_KEY=user_provided
 OPENAI_API_KEY=user_provided
 
+# ============================================
+# Admin Panel Configuration
+# ============================================
+ADMIN_PANEL_PORT=${ADMIN_PANEL_PORT}
+ADMIN_PANEL_SESSION_SECRET=${ADMIN_PANEL_SESSION_SECRET}
+
 EOF
 
 echo ""
@@ -211,6 +221,8 @@ echo "💬 LibreChat will be available at: http://localhost:${LIBRECHAT_PORT}"
 echo "   MongoDB: localhost:27017"
 echo "   Meilisearch: localhost:7700"
 echo "   VectorDB: localhost:5433"
+echo ""
+echo "🛠  Admin Panel will be available at: http://localhost:${ADMIN_PANEL_PORT}"
 echo ""
 echo "📝 LibreChat Initial User (same as Langfuse)"
 echo "   Email: ${USER_EMAIL}"

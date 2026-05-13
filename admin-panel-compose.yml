@@ -1,0 +1,22 @@
+services:
+  admin-panel:
+    image: ghcr.io/clickhouse/librechat-admin-panel:latest
+    restart: always
+    ports:
+      - "${ADMIN_PANEL_PORT:-3081}:${ADMIN_PANEL_PORT:-3081}"
+    depends_on:
+      librechat:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:'+process.env.PORT).then(r=>{if(!r.ok)throw 1}).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    environment:
+      - PORT=${ADMIN_PANEL_PORT:-3081}
+      - SESSION_SECRET=${ADMIN_PANEL_SESSION_SECRET}
+      - VITE_API_BASE_URL=http://localhost:${LIBRECHAT_PORT:-3080}
+      - API_SERVER_URL=http://librechat:${LIBRECHAT_PORT:-3080}
+      - ADMIN_SSO_ONLY=${ADMIN_SSO_ONLY:-false}
+      - ADMIN_SESSION_IDLE_TIMEOUT_MS=${ADMIN_SESSION_IDLE_TIMEOUT_MS:-1800000}
