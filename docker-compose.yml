@@ -1,7 +1,8 @@
 # Main Docker Compose file
-# Includes all services: Langfuse, ClickHouse MCP, and LibreChat
+# Includes all services: Langfuse, ClickHouse MCP, LibreChat, and the Admin Panel
 
 include:
   - langfuse-compose.yml
   - clickhouse-mcp-compose.yml
   - librechat-compose.yml
+  - admin-panel-compose.yml

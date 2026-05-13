@@ -14,6 +14,7 @@ This project runs a fully self-hosted agentic analytics environment with Docker 
 | Component | Purpose | Port |
 |---|---|---|
 | **LibreChat** | Modern Chat UI with multi-model / provider support (OpenAI, Anthropic, Google) | `3080` |
+| **Admin Panel** | Browser-based management UI for LibreChat (config, users, groups, roles) | `3081` |
 | **ClickHouse MCP** | MCP server that gives agents access to ClickHouse | `8000` |
 | **Langfuse** | LLM observability — traces, evals, prompt management | `3000` |
 | **ClickHouse** | World's fastest analytical database | `8123` |
@@ -58,16 +59,17 @@ docker compose up -d
 ### 3. Access the services
 
 - **LibreChat** — [http://localhost:3080](http://localhost:3080)
+- **Admin Panel** — [http://localhost:3081](http://localhost:3081)
 - **Langfuse** — [http://localhost:3000](http://localhost:3000)
 - **MinIO Console** — [http://localhost:9091](http://localhost:9091) (Find credentials in `.env` under MINIO_ROOT_* fields)
 
-An admin user is created automatically on first startup using the credentials from your `.env` file.
+An admin user is created automatically on first startup using the credentials from your `.env` file. The same credentials log into both LibreChat and the Admin Panel.
 
 ## Architecture
 
 ![Architecture](assets/architecture.png)
 
-LibreChat connects to ClickHouse through the MCP server, allowing AI agents to query and analyze your data. All LLM interactions are traced in Langfuse for observability, evaluation, and prompt management.
+LibreChat connects to ClickHouse through the MCP server, allowing AI agents to query and analyze your data. All LLM interactions are traced in Langfuse for observability, evaluation, and prompt management. The Admin Panel reads and writes LibreChat's database to manage configuration, users, groups, and roles without editing `librechat.yaml` by hand.
 
 ## Scripts
 
@@ -81,12 +83,13 @@ LibreChat connects to ClickHouse through the MCP server, allowing AI agents to q
 
 ## Configuration
 
-- **LibreChat** — `librechat.yaml` configures endpoints, MCP servers, and agent capabilities
-- **Environment** — `.env` holds all credentials and service configuration (see `.env.example` for reference)
-- **Docker** — `docker-compose.yml` includes the three compose files:
+- **LibreChat** — `librechat.yaml` configures endpoints, MCP servers, and agent capabilities. The Admin Panel ([http://localhost:3081](http://localhost:3081)) offers a browser-based alternative for most of these settings, plus user/group/role management.
+- **Environment** — `.env` holds all credentials and service configuration (see `.env.example` for reference). The Admin Panel requires `ADMIN_PANEL_SESSION_SECRET` (32+ chars) — `generate-env.sh` populates this automatically.
+- **Docker** — `docker-compose.yml` includes the four compose files:
   - `langfuse-compose.yml` — Langfuse, ClickHouse, PostgreSQL, Redis, MinIO
   - `clickhouse-mcp-compose.yml` — ClickHouse MCP server
   - `librechat-compose.yml` — LibreChat, MongoDB, Meilisearch, pgvector, RAG API
+  - `admin-panel-compose.yml` — LibreChat Admin Panel
 
 ## Reset Everything
 
@@ -109,4 +112,5 @@ docker compose up -d
 - [Documentation](https://clickhouse.com/docs/use-cases/AI/MCP/librechat) — Full setup guide for adding ClickHouse MCP to LibreChat
 - [ClickHouse MCP](https://github.com/ClickHouse/mcp-clickhouse) — MCP server for ClickHouse
 - [LibreChat](https://github.com/danny-avila/LibreChat) — Chat UI
+- [LibreChat Admin Panel](https://github.com/ClickHouse/librechat-admin-panel) — Browser-based management UI for LibreChat
 - [Langfuse](https://langfuse.com) — LLM observability
