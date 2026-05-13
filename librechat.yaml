@@ -21,19 +21,18 @@ interface:
 endpoints:
   agents:
     capabilities:
-      [
-        "hide_sequential_outputs",
-        "end_after_tools",
-        "execute_code",
-        "file_search",
-        "web_search",
-        "artifacts",
-        "actions",
-        "context",
-        "tools",
-        "chain",
-        "ocr",
-      ]
+      - programmatic_tools
+      - deferred_tools
+      - execute_code
+      - web_search
+      - artifacts
+      - actions
+      - context
+      - tools
+      - chain
+      - ocr
+      - skills
+      - subagents
   openAI:
     fetch: true
 
