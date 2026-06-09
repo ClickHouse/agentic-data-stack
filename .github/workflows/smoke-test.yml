@@ -1,13 +1,5 @@
 name: Stack smoke test
 
-# Proves the full stack still launches cleanly:
-#  - daily, to catch upstream ":latest" image drift
-#  - on PRs that touch launch-relevant files
-#  - on demand via the Actions tab
-#
-# The stack is secret-free to launch: scripts/generate-env.sh is non-interactive
-# and LLM keys default to "user_provided", so no repo secrets are required.
-
 on:
   schedule:
     - cron: '0 13 * * *'   # daily ~13:00 UTC
@@ -34,14 +26,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      # The combined image set (clickhouse, langfuse x2, mongo, meilisearch,
-      # pgvector, redis, postgres, minio, librechat, rag-api, admin-panel) is
-      # large; reclaim space the hosted runner wastes on preinstalled tooling.
-      - name: Free disk space
-        run: |
-          sudo rm -rf /opt/hostedtoolcache /usr/local/lib/android /usr/share/dotnet /opt/ghc
-          df -h /
 
       - name: Generate .env
         run: ./scripts/generate-env.sh
