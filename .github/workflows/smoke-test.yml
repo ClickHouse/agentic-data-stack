@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Generate .env
-        run: ./scripts/generate-env.sh
+        run: bash scripts/generate-env.sh
 
       # --wait blocks until every healthchecked service is healthy and the rest
       # are running; it fails if any service is unhealthy or a one-shot exits
@@ -80,7 +80,7 @@ jobs:
   # surface as a red check on the PR, so they don't need an issue.
   report-daily-failure:
     needs: smoke-test
-    if: failure() && github.event_name == 'schedule'
+    if: needs.smoke-test.result == 'failure' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -100,11 +100,15 @@ jobs:
               labels: label,
             });
 
-            if (existing.data.length > 0) {
+            // listForRepo returns PRs as well as issues; exclude PRs so we
+            // never comment on a mislabeled pull request.
+            const openIssue = existing.data.find(i => !i.pull_request);
+
+            if (openIssue) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: existing.data[0].number,
+                issue_number: openIssue.number,
                 body,
               });
             } else {
