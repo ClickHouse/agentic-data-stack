@@ -48,7 +48,7 @@ mcpServers:
     args:
       - run
       - --with
-      - mcp-clickhouse==0.1.5
+      - mcp-clickhouse==0.4.0
       - --python
       - "3.13"
       - mcp-clickhouse
