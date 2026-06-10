@@ -31,12 +31,6 @@ endpoints:
       - skills
       - tools
       - chain
-  openAI:
-    fetch: true
-  anthropic:
-    fetch: true
-  google:
-    fetch: true
 
 mcpServers:
   ClickHouse-Cloud:
