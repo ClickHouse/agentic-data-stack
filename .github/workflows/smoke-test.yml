@@ -80,7 +80,7 @@ jobs:
   # surface as a red check on the PR, so they don't need an issue.
   report-daily-failure:
     needs: smoke-test
-    if: needs.smoke-test.result == 'failure' && github.event_name == 'schedule'
+    if: contains(fromJSON('["failure", "cancelled"]'), needs.smoke-test.result) && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
       issues: write
