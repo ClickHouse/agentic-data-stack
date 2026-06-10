@@ -18,6 +18,10 @@ interface:
     create: true   # Allow users to create and manage new MCP servers
     public: false  # Allow users to share MCP servers publicly (with everyone)
 
+mcpSettings:
+  allowedAddresses:
+    - "clickhouse-mcp.railway.internal:8000"
+
 endpoints:
   agents:
     capabilities:
@@ -38,20 +42,8 @@ mcpServers:
     url: https://mcp.clickhouse.cloud/mcp
     timeout: 60000
   ClickHouse-Demo:
-    command: uv
-    args:
-      - run
-      - --with
-      - mcp-clickhouse==0.4.0
-      - --python
-      - "3.13"
-      - mcp-clickhouse
-    env:
-      CLICKHOUSE_HOST: "sql-clickhouse.clickhouse.com"
-      CLICKHOUSE_PORT: "8443"
-      CLICKHOUSE_USER: "demo"
-      CLICKHOUSE_PASSWORD: ""
-      CLICKHOUSE_SECURE: "true"
-      CLICKHOUSE_VERIFY: "true"
-      CLICKHOUSE_CONNECT_TIMEOUT: "30"
-      CLICKHOUSE_SEND_RECEIVE_TIMEOUT: "30"
+    type: streamable-http
+    url: http://clickhouse-mcp.railway.internal:8000/mcp
+    timeout: 60000
+    headers:
+      Authorization: "Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}"
