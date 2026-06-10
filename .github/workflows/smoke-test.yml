@@ -47,7 +47,8 @@ jobs:
             local name="$1" url="$2" mode="$3"
             local code
             for i in $(seq 1 30); do
-              code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$url" || echo 000)"
+              code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$url" || true)"
+              code="${code:-000}"
               if [ "$mode" = "any" ] && [ "$code" != "000" ]; then
                 echo "✅ $name -> HTTP $code ($url)"; return 0
               fi
@@ -92,6 +93,24 @@ jobs:
             const label = 'smoke-test-failure';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const body = `The daily stack smoke test failed.\n\nRun: ${runUrl}`;
+
+            // Ensure the tracking label exists so the search below (and the
+            // de-dupe it powers) is reliable in a repo that has never had it.
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: 'd73a4a',
+              });
+            }
 
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
