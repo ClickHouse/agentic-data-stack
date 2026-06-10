@@ -23,9 +23,12 @@ endpoints:
     capabilities:
       - hide_sequential_outputs
       - end_after_tools
+      - deferred_tools
       - artifacts
+      - subagents
       - actions
       - context
+      - skills
       - tools
       - chain
   openAI:
