@@ -1,0 +1,141 @@
+name: Stack smoke test
+
+on:
+  schedule:
+    - cron: '0 13 * * *'   # daily ~13:00 UTC
+  pull_request:
+    paths:
+      - '**/*compose*.yml'
+      - 'scripts/**'
+      - 'librechat.yaml'
+      - 'librechat.example.yaml'
+      - 'librechat.example.env'
+      - '.env.example'
+      - '.github/workflows/smoke-test.yml'
+  workflow_dispatch:
+
+# Avoid piling up runs on the same ref.
+concurrency:
+  group: smoke-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Generate .env
+        run: bash scripts/generate-env.sh
+
+      # --wait blocks until every healthchecked service is healthy and the rest
+      # are running; it fails if any service is unhealthy or a one-shot exits
+      # non-zero. This is the core "comes up cleanly" assertion.
+      - name: Launch stack and wait for health
+        run: docker compose up -d --wait --wait-timeout 600
+
+      - name: Probe service endpoints
+        run: |
+          set -euo pipefail
+
+          # probe <name> <url> <mode>
+          #   mode=ok   -> require an HTTP 2xx/3xx status
+          #   mode=any  -> any HTTP response is success (endpoint is auth-gated)
+          probe() {
+            local name="$1" url="$2" mode="$3"
+            local code
+            for i in $(seq 1 30); do
+              code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$url" || true)"
+              code="${code:-000}"
+              if [ "$mode" = "any" ] && [ "$code" != "000" ]; then
+                echo "✅ $name -> HTTP $code ($url)"; return 0
+              fi
+              if [ "$mode" = "ok" ] && [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then
+                echo "✅ $name -> HTTP $code ($url)"; return 0
+              fi
+              sleep 5
+            done
+            echo "❌ $name did not respond as expected (last HTTP $code, $url)"; return 1
+          }
+
+          probe "LibreChat"   "http://localhost:3080/" ok
+          probe "Langfuse"    "http://localhost:3000/" ok
+          probe "Admin Panel" "http://localhost:3081/" ok
+          # MCP requires CLICKHOUSE_MCP_AUTH_TOKEN; any HTTP response proves it's
+          # listening. Depth is already covered by its compose healthcheck.
+          probe "ClickHouse MCP" "http://localhost:8000/" any
+
+      - name: Dump diagnostics on failure
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail=200
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  # On a failed DAILY run, open (or comment on) a tracking issue. PR failures
+  # surface as a red check on the PR, so they don't need an issue.
+  report-daily-failure:
+    needs: smoke-test
+    if: contains(fromJSON('["failure", "cancelled"]'), needs.smoke-test.result) && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update tracking issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = 'smoke-test-failure';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `The daily stack smoke test failed.\n\nRun: ${runUrl}`;
+
+            // Ensure the tracking label exists so the search below (and the
+            // de-dupe it powers) is reliable in a repo that has never had it.
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: 'd73a4a',
+              });
+            }
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+            });
+
+            // listForRepo returns PRs as well as issues; exclude PRs so we
+            // never comment on a mislabeled pull request.
+            const openIssue = existing.data.find(i => !i.pull_request);
+
+            if (openIssue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: openIssue.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Daily stack smoke test failed',
+                body,
+                labels: [label],
+              });
+            }
