@@ -26,6 +26,14 @@ This project runs a fully self-hosted agentic analytics environment with Docker 
 | **pgvector** | Vector database for RAG | `5433` |
 | **RAG API** | Retrieval-augmented generation service for LibreChat | `8001` |
 
+## Deploy on Railway
+
+One-click deploy of a "Lite" variant of the stack — LibreChat, the Admin Panel, Langfuse v3, and a ClickHouse MCP server pre-configured against the public ClickHouse demo cluster.
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/agentic-data-stack-lite)
+
+The Railway template skips Meilisearch, pgvector, and the RAG API for simplicity. The ClickHouse MCP server ships pointed at `sql-clickhouse.clickhouse.com` so you can chat with the public demo data immediately; the ClickHouse Cloud MCP is also wired up if you want to OAuth into your own Cloud account post-deploy. Prefer to self-host? See [Quick Start](#quick-start) below.
+
 ## Quick Start
 
 ### Prerequisites
