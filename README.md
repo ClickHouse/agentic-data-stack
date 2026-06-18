@@ -58,6 +58,8 @@ The Railway template skips Meilisearch, pgvector, and the RAG API for simplicity
 
 This is your fastest way to get started with the Agentic Data Stack. It generates a `.env` file with random credentials for all services, then presents an interactive menu to optionally configure API keys for OpenAI, Anthropic, and/or Google. Any providers you skip will remain as `user_provided`, letting users enter their own keys in the LibreChat UI.
 
+The script then asks whether LibreChat should send its Langfuse traces to the local Langfuse container (the default) or to a remote Langfuse project. Choose the cloud option to point LibreChat at Langfuse Cloud (or any self-hosted Langfuse) by entering the base URL, public key, and secret key for that project. You can change this later by editing `LANGFUSE_BASE_URL`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_SECRET_KEY` in `.env`.
+
 You can also generate credentials separately and customize the initial administrator account credentials:
 
 ```bash

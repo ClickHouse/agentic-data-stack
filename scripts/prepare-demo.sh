@@ -97,6 +97,23 @@ multiselect() {
     eval $retval='("${selected[@]}")'
 }
 
+# Upsert KEY=VALUE in $ENV_FILE — replace if present, append otherwise.
+set_env_var() {
+    local key="$1"
+    local value="$2"
+    local escaped_value
+    escaped_value=$(printf '%s' "$value" | sed -e 's/[\\&|]/\\&/g')
+    if grep -q "^${key}=" "$ENV_FILE"; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|^${key}=.*|${key}=${escaped_value}|" "$ENV_FILE"
+        else
+            sed -i "s|^${key}=.*|${key}=${escaped_value}|" "$ENV_FILE"
+        fi
+    else
+        printf '\n%s=%s\n' "$key" "$value" >> "$ENV_FILE"
+    fi
+}
+
 echo "=== API Key Configuration ==="
 echo ""
 echo "  Select which providers to configure with API keys."
@@ -115,53 +132,133 @@ done
 
 if [ ${#SELECTED[@]} -eq 0 ]; then
     echo "  No providers selected — API key environment variables not modified."
+else
     echo ""
-    echo "✅ Demo environment is ready!"
-    echo ""
-    echo "  Run 'docker compose up -d' to get started."
-    echo ""
-    exit 0
+    for i in "${SELECTED[@]}"; do
+        provider="${PROVIDERS[$i]}"
+        env_key="${ENV_KEYS[$i]}"
+
+        while true; do
+            read -s -p "  Enter $provider API key: " api_key
+            echo ""
+            if [ -n "$api_key" ]; then
+                break
+            fi
+            echo "  Key cannot be empty. Try again or Ctrl+C to abort."
+        done
+
+        set_env_var "$env_key" "$api_key"
+
+        echo "  ✓ ${provider} key saved"
+    done
+fi
+
+# Ensure the LibreChat-side Langfuse keys exist in .env. Older .env files
+# (generated before LANGFUSE_PUBLIC_KEY / SECRET_KEY / BASE_URL were split out)
+# only have the LANGFUSE_INIT_PROJECT_* values; default the new keys to the
+# local Langfuse stack so the "local" choice keeps working untouched.
+if ! grep -q "^LANGFUSE_BASE_URL=" "$ENV_FILE"; then
+    set_env_var "LANGFUSE_BASE_URL" "http://langfuse-web:3000"
+fi
+if ! grep -q "^LANGFUSE_PUBLIC_KEY=" "$ENV_FILE"; then
+    init_pub=$(grep -E "^LANGFUSE_INIT_PROJECT_PUBLIC_KEY=" "$ENV_FILE" | head -n1 | cut -d= -f2-)
+    set_env_var "LANGFUSE_PUBLIC_KEY" "${init_pub}"
+fi
+if ! grep -q "^LANGFUSE_SECRET_KEY=" "$ENV_FILE"; then
+    init_sec=$(grep -E "^LANGFUSE_INIT_PROJECT_SECRET_KEY=" "$ENV_FILE" | head -n1 | cut -d= -f2-)
+    set_env_var "LANGFUSE_SECRET_KEY" "${init_sec}"
 fi
 
 echo ""
+echo "=== Langfuse Instrumentation ==="
+echo ""
+echo "  LibreChat sends LLM traces to Langfuse for observability."
+echo "  By default, traces stay local (the Langfuse container in this stack)."
+echo "  You can instead send them to a Langfuse Cloud (or other remote) project."
+echo ""
 
-for i in "${SELECTED[@]}"; do
-    provider="${PROVIDERS[$i]}"
-    env_key="${ENV_KEYS[$i]}"
+LANGFUSE_TARGET="local"
+while true; do
+    read -p "  Use Langfuse Cloud / a remote project? [y/N] " langfuse_cloud_choice
+    case "${langfuse_cloud_choice}" in
+        [yY]|[yY][eE][sS])
+            LANGFUSE_TARGET="cloud"
+            break
+            ;;
+        ""|[nN]|[nN][oO])
+            LANGFUSE_TARGET="local"
+            break
+            ;;
+        *)
+            echo "  Please answer y or n."
+            ;;
+    esac
+done
+
+if [ "$LANGFUSE_TARGET" = "cloud" ]; then
+    echo ""
+    echo "  Enter the connection details for your remote Langfuse project."
+    echo "  (Project Settings -> API Keys in the Langfuse UI.)"
+    echo ""
 
     while true; do
-        read -s -p "  Enter $provider API key: " api_key
-        echo ""
-        if [ -n "$api_key" ]; then
+        read -p "  Langfuse base URL [https://cloud.langfuse.com]: " langfuse_base_url
+        langfuse_base_url="${langfuse_base_url:-https://cloud.langfuse.com}"
+        if [[ "$langfuse_base_url" =~ ^https?:// ]]; then
             break
         fi
-        echo "  Key cannot be empty. Try again or Ctrl+C to abort."
+        echo "  Base URL must start with http:// or https://. Try again."
     done
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|^${env_key}=.*|${env_key}=${api_key}|" "$ENV_FILE"
-    else
-        sed -i "s|^${env_key}=.*|${env_key}=${api_key}|" "$ENV_FILE"
-    fi
+    while true; do
+        read -p "  Langfuse public key (pk-lf-...): " langfuse_public_key
+        if [ -n "$langfuse_public_key" ]; then
+            break
+        fi
+        echo "  Public key cannot be empty. Try again or Ctrl+C to abort."
+    done
 
-    echo "  ✓ ${provider} key saved"
-done
+    while true; do
+        read -s -p "  Langfuse secret key (sk-lf-...): " langfuse_secret_key
+        echo ""
+        if [ -n "$langfuse_secret_key" ]; then
+            break
+        fi
+        echo "  Secret key cannot be empty. Try again or Ctrl+C to abort."
+    done
+
+    set_env_var "LANGFUSE_BASE_URL" "$langfuse_base_url"
+    set_env_var "LANGFUSE_PUBLIC_KEY" "$langfuse_public_key"
+    set_env_var "LANGFUSE_SECRET_KEY" "$langfuse_secret_key"
+
+    echo "  ✓ LibreChat will send traces to ${langfuse_base_url}"
+else
+    echo "  ✓ LibreChat will send traces to the local Langfuse stack."
+fi
 
 echo ""
 echo "✅ Demo environment is ready!"
 echo ""
-echo "  Summary:"
-for i in "${!PROVIDERS[@]}"; do
-    found=false
-    for s in "${SELECTED[@]}"; do
-        [ "$s" = "$i" ] && found=true && break
-    done
-    if $found; then
-        echo "    ✔ ${PROVIDERS[$i]}  (configured)"
-    else
+echo "  Provider summary:"
+if [ ${#SELECTED[@]} -eq 0 ]; then
+    for i in "${!PROVIDERS[@]}"; do
         echo "    - ${PROVIDERS[$i]}  (user_provided)"
-    fi
-done
+    done
+else
+    for i in "${!PROVIDERS[@]}"; do
+        found=false
+        for s in "${SELECTED[@]}"; do
+            [ "$s" = "$i" ] && found=true && break
+        done
+        if $found; then
+            echo "    ✔ ${PROVIDERS[$i]}  (configured)"
+        else
+            echo "    - ${PROVIDERS[$i]}  (user_provided)"
+        fi
+    done
+fi
+echo ""
+echo "  Langfuse target: ${LANGFUSE_TARGET}"
 echo ""
 echo "  Run 'docker compose up -d' to get started."
 echo ""
