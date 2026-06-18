@@ -123,6 +123,14 @@ LANGFUSE_INIT_PROJECT_NAME=${LANGFUSE_INIT_PROJECT_NAME}
 LANGFUSE_INIT_PROJECT_PUBLIC_KEY=${LANGFUSE_INIT_PROJECT_PUBLIC_KEY}
 LANGFUSE_INIT_PROJECT_SECRET_KEY=${LANGFUSE_INIT_PROJECT_SECRET_KEY}
 
+# LibreChat -> Langfuse instrumentation target.
+# Defaults to the local Langfuse stack started by langfuse-compose.yml.
+# Point at Langfuse Cloud (or any remote Langfuse) by overriding these three
+# values, e.g. via scripts/prepare-demo.sh.
+LANGFUSE_PUBLIC_KEY=${LANGFUSE_INIT_PROJECT_PUBLIC_KEY}
+LANGFUSE_SECRET_KEY=${LANGFUSE_INIT_PROJECT_SECRET_KEY}
+LANGFUSE_BASE_URL=http://langfuse-web:3000
+
 # Your login credentials
 LANGFUSE_INIT_USER_EMAIL=${USER_EMAIL}
 LANGFUSE_INIT_USER_PASSWORD=${USER_PASSWORD}

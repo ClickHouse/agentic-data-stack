@@ -34,9 +34,11 @@ services:
       - VECTORDB_USER=${VECTORDB_USER:-myuser}
       - VECTORDB_PASSWORD=${VECTORDB_PASSWORD:-mypassword}
       # Langfuse Integration - Tracing and Observability
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_INIT_PROJECT_PUBLIC_KEY}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_INIT_PROJECT_SECRET_KEY}
-      - LANGFUSE_BASE_URL=http://langfuse-web:3000
+      # Defaults point at the local Langfuse stack; override these in .env to
+      # send traces to a Langfuse Cloud (or other remote) project instead.
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_BASE_URL=${LANGFUSE_BASE_URL}
     volumes:
       - type: bind
         source: ./.env
