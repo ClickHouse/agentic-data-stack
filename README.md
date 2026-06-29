@@ -7,13 +7,26 @@ Learn more at [clickhouse.ai](https://clickhouse.ai) and the [Agentic Data Stack
 
 ## One Click Deploy
 
-Want to skip the setup and jump straight into adding agentic analytics into your workflow? Click the Railway button below to spin up a preconfigured instance of the Agentic Data Stack in the cloud.
+Want to skip the setup and jump straight into adding agentic analytics into your workflow? Choose a Railway template below to spin up a preconfigured instance of the Agentic Data Stack in the cloud.
 
-<p align="center">
-<a href="https://railway.com/deploy/agentic-data-stack-lite">
-  <img src="https://railway.com/button.svg" alt="Deploy on Railway">
-</a>
-</p>
+<table align="center">
+  <tr>
+    <th><div align="center">Langfuse OSS</div></th>
+    <th><div align="center">Langfuse Cloud</div></th>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://railway.com/deploy/agentic-data-stack-lite">
+        <img src="https://railway.com/button.svg" alt="Deploy on Railway">
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://railway.com/deploy/agentic-data-stack-lite-langfuse-cloud">
+        <img src="https://railway.com/button.svg" alt="Deploy on Railway (Langfuse Cloud)">
+      </a>
+    </td>
+  </tr>
+</table>
 
 More details available in the [Deploy on Railway](#deploy-on-railway) section.
 
@@ -40,9 +53,12 @@ This project runs a fully self-hosted agentic analytics environment with Docker 
 
 ## Deploy on Railway
 
-One-click deploy of a "Lite" variant of the stack — LibreChat, the Admin Panel, Langfuse v3, and a ClickHouse MCP server pre-configured against the public ClickHouse demo cluster.
+One-click deploy of two "Lite" variants of the stack:
 
-The Railway template skips Meilisearch, pgvector, and the RAG API for simplicity. The ClickHouse MCP server ships pointed at `sql-clickhouse.clickhouse.com` so you can chat with the public demo data immediately; the ClickHouse Cloud MCP is also wired up if you want to OAuth into your own Cloud account post-deploy. Prefer to self-host? See [Quick Start](#quick-start) below.
+- **Langfuse OSS** — Deploys LibreChat, the Admin Panel, Langfuse v3, and a ClickHouse MCP server pre-configured against the public ClickHouse demo cluster.
+- **Langfuse Cloud** — Deploys LibreChat, the Admin Panel, and ClickHouse MCP, and is pre-configured to send traces to your existing Langfuse Cloud (or other remote Langfuse) project.
+
+Both Railway templates skip Meilisearch, pgvector, and the RAG API for simplicity. The ClickHouse MCP server ships pointed at `sql-clickhouse.clickhouse.com` so you can chat with the public demo data immediately; the ClickHouse Cloud MCP is also wired up if you want to OAuth into your own Cloud account post-deploy. Prefer to self-host? See [Quick Start](#quick-start) below.
 
 ## Quick Start
 
