@@ -55,3 +55,22 @@ drifts). Confirm/refresh them against the live UI with:
 ```bash
 npx playwright codegen --test-id-attribute=data-testid http://localhost:3080/c/new
 ```
+
+## Troubleshooting
+
+**`Playwright Test did not expect test.describe()/test.use() to be called here`**
+(thrown while loading the first spec) means two different `@playwright/test`
+versions are resolving — almost always a stale `node_modules` where the
+`playwright` binary and the `@playwright/test` library have drifted apart. The
+committed lockfile pins both to the same version, so reinstall from it:
+
+```bash
+cd e2e
+rm -rf node_modules
+npm ci
+```
+
+Also make sure you're using the local runner, not a globally installed one
+(`npx playwright --version` should match `@playwright/test` in package.json). A
+global `playwright` on `PATH` can shadow the local binary and reintroduce the
+mismatch.
