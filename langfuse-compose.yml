@@ -77,7 +77,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      # Langfuse web runs DB migrations on cold start and typically takes 2-3
+      # minutes to answer /api/public/health. A short grace period made
+      # `docker compose up --wait` declare it unhealthy (~80s) before it was
+      # ever ready, failing the smoke test. Give the cold start room.
+      start_period: 180s
     environment:
       <<: *langfuse-worker-env
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-mysecret} # CHANGEME
