@@ -7,18 +7,23 @@ import { STORAGE_STATE } from "../lib/paths";
 /**
  * Requirement: every authed spec starts already logged in as the seeded admin.
  *
- * We log in ONCE here via the API (`POST /api/auth/login`) rather than driving
- * the form in every spec — faster and less brittle. The response sets LibreChat's
- * refresh-token cookie; saving the request context's storage state hands that
- * cookie to each spec's browser, which the app exchanges for an access token on
- * load. librechat.spec.ts separately covers the login FORM itself.
+ * We log in ONCE here through the UI and save the resulting storage state.
+ * An API-only login (POST /api/auth/login) captures the refresh cookie but NOT
+ * the localStorage the LibreChat SPA also relies on, so a browser restored from
+ * it bounces back to /login. Driving the real form captures cookies AND
+ * localStorage — the canonical Playwright auth recipe — so specs load
+ * authenticated.
  */
-setup("authenticate via API", async ({ request }) => {
-  const res = await request.post("/api/auth/login", {
-    data: { email: config.login.email, password: config.login.password },
-  });
-  expect(res.ok(), `login failed for ${config.login.email}: HTTP ${res.status()} ${await res.text()}`).toBeTruthy();
+setup("authenticate", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("textbox", { name: "Email", exact: true }).fill(config.login.email);
+  await page.getByRole("textbox", { name: "Password", exact: true }).fill(config.login.password);
+  await page.getByRole("button", { name: /continue|log ?in|sign ?in/i }).click();
+
+  // The new-chat button only renders inside the authenticated app shell, so its
+  // visibility proves the login succeeded before we snapshot the session.
+  await expect(page.getByTestId("new-chat-button")).toBeVisible({ timeout: 30_000 });
 
   mkdirSync(dirname(STORAGE_STATE), { recursive: true });
-  await request.storageState({ path: STORAGE_STATE });
+  await page.context().storageState({ path: STORAGE_STATE });
 });

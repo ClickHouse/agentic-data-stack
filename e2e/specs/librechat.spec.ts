@@ -14,9 +14,9 @@ test.describe("LibreChat UI", () => {
     const page = await context.newPage();
     await page.goto("/login");
 
-    await expect(page.getByLabel("Email")).toBeVisible();
-    await expect(page.getByLabel("Password")).toBeVisible();
-    await expect(page.getByTestId("login-button")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Email", exact: true })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Password", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue|log ?in|sign ?in/i })).toBeVisible();
 
     await context.close();
   });
@@ -28,7 +28,7 @@ test.describe("LibreChat UI", () => {
     await expect(page.getByTestId("text-input")).toBeVisible();
     await expect(page.getByTestId("new-chat-button")).toBeVisible();
     // We are authed, so we must NOT be bounced to the login form.
-    await expect(page.getByTestId("login-button")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /welcome back/i })).toHaveCount(0);
   });
 
   test("seeded admin email is the configured login", async () => {
