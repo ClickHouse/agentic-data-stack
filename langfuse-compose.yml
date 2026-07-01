@@ -74,14 +74,17 @@ services:
       - 3000:3000
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/public/health || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
-      # Langfuse web runs DB migrations on cold start and typically takes 2-3
-      # minutes to answer /api/public/health. A short grace period made
-      # `docker compose up --wait` declare it unhealthy (~80s) before it was
-      # ever ready, failing the smoke test. Give the cold start room.
-      start_period: 180s
+      retries: 12
+      # Langfuse web runs Prisma DB migrations on cold start; on a fresh CI DB
+      # this was still migrating past 220s, so a shorter grace made
+      # `docker compose up --wait` declare it unhealthy before it ever answered
+      # /api/public/health. A passing check flips the container healthy
+      # immediately (start_period only suppresses early failures), so a generous
+      # grace costs nothing on fast starts. 300s + 12x10s retries = ~420s of
+      # headroom, comfortably under the 600s --wait-timeout.
+      start_period: 300s
     environment:
       <<: *langfuse-worker-env
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-mysecret} # CHANGEME
