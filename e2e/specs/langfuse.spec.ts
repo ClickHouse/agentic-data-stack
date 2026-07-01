@@ -6,14 +6,18 @@ import { config } from "../lib/config";
  * a DIFFERENT origin from LibreChat, so the shared storage state doesn't apply —
  * we sign in through Langfuse's own form using the seeded init-user credentials,
  * then confirm the Default Project's dashboard and Traces view load.
+ *
+ * We navigate with absolute Langfuse URLs rather than overriding `baseURL` via
+ * top-level `test.use()`: that override is brittle across Playwright loader
+ * setups (it throws "did not expect test.use() to be called here" in some
+ * environments), and being explicit about the cross-origin target is clearer.
  */
 
-// Langfuse runs at its own base URL; override the LibreChat baseURL for this file.
-test.use({ baseURL: config.langfuseBaseUrl });
+const LF = config.langfuseBaseUrl;
 
 test.describe("Langfuse UI", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/auth/sign-in");
+    await page.goto(`${LF}/auth/sign-in`);
     await page.locator('input[name="email"]').fill(config.login.email);
     await page.locator('input[name="password"]').fill(config.login.password);
     await page.getByRole("button", { name: /sign in/i }).click();
@@ -22,12 +26,12 @@ test.describe("Langfuse UI", () => {
   });
 
   test("Default Project dashboard loads", async ({ page }) => {
-    await page.goto(`/project/${config.langfuse.projectId}`);
+    await page.goto(`${LF}/project/${config.langfuse.projectId}`);
     await expect(page.getByText(config.langfuse.projectName, { exact: false }).first()).toBeVisible();
   });
 
   test("Traces view loads", async ({ page }) => {
-    await page.goto(`/project/${config.langfuse.projectId}/traces`);
+    await page.goto(`${LF}/project/${config.langfuse.projectId}/traces`);
     await expect(page.getByRole("heading", { name: /traces/i })).toBeVisible();
   });
 });
