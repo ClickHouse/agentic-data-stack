@@ -1,0 +1,44 @@
+# E2E override — layered on top of docker-compose.yml, ONLY for the daily/manual
+# Playwright suite. Production config is untouched: this file adds the secret-free
+# mock inference service and repoints LibreChat at an E2E-only config so a chat
+# exercises the REAL MCP server, ClickHouse, and Langfuse without any API key.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --wait
+#
+# Why a config override instead of editing librechat.yaml: the mock endpoint must
+# never leak into a real deployment. CONFIG_PATH points LibreChat at a NEW mount
+# path (/app/librechat.e2e.yaml) so it can't collide with the prod bind mount.
+
+services:
+  mock-llm:
+    image: node:22-alpine
+    restart: always
+    working_dir: /app
+    command: ["node", "server.js"]
+    environment:
+      - PORT=8080
+      - MOCK_MODEL=mock-model
+    volumes:
+      - type: bind
+        source: ./e2e/mock-llm/server.js
+        target: /app/server.js
+        read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/v1/models || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 3s
+
+  librechat:
+    depends_on:
+      mock-llm:
+        condition: service_healthy
+    environment:
+      # Load the E2E config (adds the MockLLM endpoint) from its own mount path.
+      - CONFIG_PATH=/app/librechat.e2e.yaml
+    volumes:
+      - type: bind
+        source: ./e2e/librechat.e2e.yaml
+        target: /app/librechat.e2e.yaml
+        read_only: true
