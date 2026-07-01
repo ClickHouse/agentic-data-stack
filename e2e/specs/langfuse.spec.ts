@@ -21,8 +21,9 @@ test.describe("Langfuse UI", () => {
     await page.locator('input[name="email"]').fill(config.login.email);
     await page.locator('input[name="password"]').fill(config.login.password);
     await page.getByRole("button", { name: /sign in/i }).click();
-    // A successful sign-in leaves the auth pages for a /project/... route.
-    await page.waitForURL(/\/(project|organization|onboarding|setup)\b/, { timeout: 30_000 });
+    // A successful sign-in navigates away from /auth/. The exact destination
+    // varies by Langfuse version; each test drives to its own URL anyway.
+    await page.waitForURL((url) => !url.pathname.startsWith("/auth/"), { timeout: 30_000 });
   });
 
   test("Default Project dashboard loads", async ({ page }) => {
