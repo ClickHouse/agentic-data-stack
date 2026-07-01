@@ -9,9 +9,13 @@ import { STORAGE_STATE } from "./lib/paths";
  *
  * The `setup` project logs in once and writes storage state; every other spec
  * depends on it and starts authenticated. CI is stricter (retries, forbidOnly).
+ *
+ * Each project sets its own `testDir` because the auth setup lives outside the
+ * specs dir: `testMatch` only matches files found under a project's `testDir`,
+ * so a top-level `testDir: ./specs` would silently discover zero setup files and
+ * the storage state would never be written (ENOENT when a spec loads it).
  */
 export default defineConfig({
-  testDir: "./specs",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -28,9 +32,10 @@ export default defineConfig({
   },
 
   projects: [
-    { name: "setup", testMatch: /.*\.setup\.ts/ },
+    { name: "setup", testDir: "./setup", testMatch: /.*\.setup\.ts/ },
     {
       name: "chromium",
+      testDir: "./specs",
       testMatch: /.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"], storageState: STORAGE_STATE },
       dependencies: ["setup"],
