@@ -26,7 +26,7 @@ test.describe("LibreChat UI", () => {
 
     // The message composer is the definitive "chat is ready" signal.
     await expect(page.getByTestId("text-input")).toBeVisible();
-    await expect(page.getByTestId("nav-new-chat-button")).toBeVisible();
+    await expect(page.getByTestId("new-chat-button")).toBeVisible();
     // We are authed, so we must NOT be bounced to the login form.
     await expect(page.getByTestId("login-button")).toHaveCount(0);
   });
