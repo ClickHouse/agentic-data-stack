@@ -33,6 +33,9 @@ test.describe("Langfuse UI", () => {
 
   test("Traces view loads", async ({ page }) => {
     await page.goto(`${LF}/project/${config.langfuse.projectId}/traces`);
-    await expect(page.getByRole("heading", { name: /traces/i })).toBeVisible();
+    // The page heading reads "Tracing"; "Traces" is the (already active) nav
+    // link beneath it, not a heading.
+    await expect(page.getByRole("heading", { name: /tracing/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Traces", exact: true })).toBeVisible();
   });
 });
