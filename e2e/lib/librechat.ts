@@ -15,6 +15,7 @@ import { expect, type Page } from "@playwright/test";
  */
 
 const MOCK_ENDPOINT = "MockLLM";
+const MOCK_MODEL = "mock-model";
 const MCP_SERVER = "ClickHouse-Local";
 
 /** Best-effort click of the first locator that becomes visible; never throws. */
@@ -41,12 +42,23 @@ export const selectMockEndpoint = async (page: Page): Promise<void> => {
     page.getByRole("option", { name: MOCK_ENDPOINT }),
     page.getByText(MOCK_ENDPOINT, { exact: false }),
   ]);
+  // Selecting the endpoint only opens its model submenu; the model itself
+  // still needs a click to finalize the selection.
+  await tryClick(page, [
+    page.getByRole("option", { name: MOCK_MODEL }),
+    page.getByText(MOCK_MODEL, { exact: false }),
+  ]);
 };
 
 /** Enable the ClickHouse-Local MCP server for the conversation. */
 export const enableClickHouseMcp = async (page: Page): Promise<void> => {
   await tryClick(page, [
     page.getByTestId("mcp-select"),
+    // Exact match first: the composer's per-message MCP toggle is named "MCP
+    // Servers", but a loose /mcp/i regex also matches the sidebar's "MCP
+    // Settings" connection-management button, which sits earlier in the DOM
+    // and would otherwise win `tryClick`'s `.first()`.
+    page.getByRole("button", { name: "MCP Servers" }),
     page.getByRole("button", { name: /mcp/i }),
     page.getByRole("button", { name: /tools/i }),
   ]);
@@ -72,14 +84,21 @@ export const sendPrompt = async (page: Page, prompt: string): Promise<void> => {
  * Give thumbs-up feedback on the latest assistant message. The controls appear
  * on hover, so we hover the messages view first. Best-effort selection (see the
  * strategy note above): if it misses, the caller's score assertion fails loudly.
+ *
+ * The positive-feedback button (currently titled "Love this") only opens a
+ * reason submenu; the feedback isn't actually submitted to the backend until
+ * one of the reason chips (e.g. "Accurate and Reliable") is picked.
  */
 export const giveThumbsUp = async (page: Page): Promise<void> => {
   const messages = page.getByTestId("messages-view");
   await messages.hover().catch(() => {});
   await tryClick(page, [
     page.getByTestId("good-response-button"),
-    page.getByRole("button", { name: /thumbs.?up|good response|helpful/i }),
+    page.getByRole("button", { name: /love this|thumbs.?up|good response|helpful/i }),
     page.locator('button[aria-label*="thumb" i]').first(),
+  ]);
+  await tryClick(page, [
+    page.getByRole("button", { name: /accurate|creative|well-written|attention to detail/i }),
   ]);
 };
 
