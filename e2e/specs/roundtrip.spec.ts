@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../lib/fixtures";
 import { runMockChat } from "../lib/librechat";
 import { waitForTrace, waitForObservation } from "../lib/langfuse";
 
