@@ -1,0 +1,129 @@
+name: E2E tests
+
+# Heavy, browser-level suite. It runs DAILY + on manual dispatch only — never on
+# PRs. The smoke test (smoke-test.yml) stays the PR-time launch gate; this suite
+# catches `:latest` image drift and functional regressions on a schedule.
+on:
+  schedule:
+    - cron: '37 4 * * *'   # daily ~04:37 UTC (offset from the smoke test's 13:00)
+  workflow_dispatch:
+
+# Avoid piling up runs on the same ref.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Generate .env
+        run: bash scripts/generate-env.sh
+
+      # --wait blocks until every healthchecked service is healthy (mock-llm,
+      # ClickHouse MCP, LibreChat, Langfuse, ...) and fails if any is unhealthy.
+      - name: Launch stack (prod + e2e override) and wait for health
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --wait --wait-timeout 600
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Install Playwright and browser
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 14
+
+      - name: Dump diagnostics on failure
+        if: failure()
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps -a
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs --no-color --tail=200
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
+
+  # On a failed DAILY run, open (or comment on) a de-duped tracking issue. Manual
+  # (workflow_dispatch) failures surface directly to the person who triggered
+  # them, so they don't need an issue. Mirrors smoke-test.yml's report job.
+  report-daily-failure:
+    needs: e2e
+    if: contains(fromJSON('["failure", "cancelled"]'), needs.e2e.result) && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update tracking issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = 'e2e-test-failure';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `The daily E2E test suite failed.\n\nRun: ${runUrl}`;
+
+            // Ensure the tracking label exists so the de-dupe search is reliable
+            // in a repo that has never had it.
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: 'd73a4a',
+              });
+            }
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+            });
+
+            // listForRepo returns PRs as well as issues; exclude PRs so we never
+            // comment on a mislabeled pull request.
+            const openIssue = existing.data.find(i => !i.pull_request);
+
+            if (openIssue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: openIssue.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Daily E2E test suite failed',
+                body,
+                labels: [label],
+              });
+            }

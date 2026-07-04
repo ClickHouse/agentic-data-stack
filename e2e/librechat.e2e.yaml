@@ -1,0 +1,67 @@
+# LibreChat config for the E2E suite ONLY (loaded via CONFIG_PATH by
+# docker-compose.e2e.yml). It is librechat.yaml plus a single secret-free
+# "MockLLM" custom endpoint pointed at the mock inference server. Everything
+# else — the agents endpoint, MCP-server access, and the ClickHouse-Local MCP
+# server — is retained verbatim so a chat drives the REAL MCP -> ClickHouse path
+# and produces REAL Langfuse traces.
+#
+# Keep this in sync with librechat.yaml when the shared sections change.
+
+version: 1.3.1
+
+cache: true
+
+interface:
+  fileCitations: true
+  mcpServers:
+    use: true # required: the round-trip test drives an MCP tool call
+    share: false
+    create: true
+    public: false
+
+endpoints:
+  # Secret-free mock inference. `fetch: false` means LibreChat trusts the static
+  # model list below instead of calling GET /v1/models at startup.
+  custom:
+    - name: "MockLLM"
+      apiKey: "sk-mock-e2e" # mock ignores auth; kept non-empty so LibreChat loads the endpoint
+      baseURL: "http://mock-llm:8080/v1"
+      models:
+        default:
+          - "mock-model"
+        fetch: false
+      titleConvo: false
+      modelDisplayLabel: "MockLLM"
+
+  agents:
+    capabilities:
+      - programmatic_tools
+      - deferred_tools
+      - execute_code
+      - web_search
+      - artifacts
+      - actions
+      - context
+      - tools
+      - chain
+      - ocr
+      - skills
+      - subagents
+
+mcpSettings:
+  allowedDomains:
+    - "http://clickhouse-mcp:8000"
+    - "https://mcp.clickhouse.cloud/mcp"
+    - "host.docker.internal"
+
+mcpServers:
+  ClickHouse-Local:
+    type: streamable-http
+    url: http://clickhouse-mcp:8000/mcp
+    timeout: 60000 # 1 minute timeout
+    headers:
+      Authorization: "Bearer ${CLICKHOUSE_MCP_AUTH_TOKEN}"
+  ClickHouse-Cloud:
+    type: streamable-http
+    url: https://mcp.clickhouse.cloud/mcp
+    timeout: 60000 # 1 minute timeout

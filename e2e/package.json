@@ -1,0 +1,14 @@
+{
+  "name": "agentic-data-stack-e2e",
+  "private": true,
+  "description": "Playwright E2E suite for the agentic data stack (daily + manual, secret-free).",
+  "scripts": {
+    "test": "playwright test",
+    "codegen": "playwright codegen --test-id-attribute=data-testid http://localhost:3080/c/new"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.0.1",
+    "typescript": "^5.9.3"
+  }
+}
