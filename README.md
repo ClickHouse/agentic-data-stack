@@ -116,6 +116,34 @@ LibreChat connects to ClickHouse through the MCP server, allowing AI agents to q
 | `scripts/reset-all.sh` | Stop all containers and wipe all data/volumes |
 | `scripts/create-librechat-user.sh` | Manually create a LibreChat admin user |
 | `scripts/init-librechat-user.sh` | Auto-init user on container startup (used internally) |
+| `scripts/sync-report-rag.mjs` | Privately fetch, organize, and index Worklist report context into LibreChat |
+
+## Report-aware chat with RAG
+
+The report RAG is provisioned as a dedicated LibreChat agent named **ClickHouse Reports**. The source documents stay in the private Worklist repository; the sync downloads them into the Git-ignored `.local/report-context/` directory, splits them into retrieval-sized documents, adds source metadata and content hashes, and uploads them to LibreChat file search.
+
+Prerequisites:
+
+- The stack is running and LibreChat is healthy.
+- `gh auth status` has access to the private `kareo-engineering/worklist` repository.
+- `.env` contains the bootstrapped LibreChat user's `LIBRECHAT_USER_EMAIL` and `LIBRECHAT_USER_PASSWORD`.
+- The RAG API has a valid embeddings key as described in Quick Start.
+
+Run an idempotent sync whenever the source context changes:
+
+```bash
+node scripts/sync-report-rag.mjs
+```
+
+The source repository, branch, path, agent name, and LibreChat URL can be overridden with `REPORT_CONTEXT_REPOSITORY`, `REPORT_CONTEXT_REF`, `REPORT_CONTEXT_PATH`, `REPORT_RAG_AGENT_NAME`, and `LIBRECHAT_URL`. Use `--sync-only` to prepare files without changing LibreChat, or `--bootstrap-only` to re-index already prepared files. The sync only removes stale files carrying its `report-context--` prefix; it does not delete manually uploaded files.
+
+### What happens during a chat
+
+1. Select **ClickHouse Reports** from LibreChat's Agents endpoint and ask a report question.
+2. The agent's compact answer rules and business glossary are included on every turn.
+3. LibreChat file search retrieves only the report definitions, SQL recipes, and schema passages relevant to that question from pgvector and adds them to the model context.
+4. For a definition-only question, GPT-5.6 answers from those retrieved passages. For a current-value question, it also calls the read-only ClickHouse MCP tools to inspect/query live data.
+5. The answer combines documented semantics with live results and identifies the retrieved source section. Retrieval runs again for each turn, so the entire corpus is not copied into every prompt.
 
 ## Configuration
 

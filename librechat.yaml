@@ -29,6 +29,7 @@ endpoints:
       - artifacts
       - actions
       - context
+      - file_search
       - tools
       - chain
       - ocr

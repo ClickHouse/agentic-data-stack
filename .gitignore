@@ -15,3 +15,6 @@
 # Temporary files
 tmp/
 temp/
+
+# Private report context fetched and indexed by scripts/sync-report-rag.mjs
+.local/report-context/
