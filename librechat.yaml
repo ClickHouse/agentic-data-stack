@@ -60,6 +60,7 @@ modelSpecs:
         endpoint: openAI
         model: gpt-5.6-sol
         useResponsesApi: true
+        reasoning_effort: none
 
 mcpSettings:
   allowedDomains:
