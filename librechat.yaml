@@ -53,12 +53,12 @@ modelSpecs:
     - google
     - agents
   list:
-    - name: gpt-5.6
+    - name: gpt-5.6-sol
       label: GPT-5.6
       default: true
       preset:
         endpoint: openAI
-        model: gpt-5.6
+        model: gpt-5.6-sol
 
 mcpSettings:
   allowedDomains:
