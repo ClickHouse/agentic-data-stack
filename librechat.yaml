@@ -9,6 +9,7 @@ cache: true
 # Interface configuration
 interface:
   fileCitations: true
+  modelSelect: true
 
   # MCP Servers configuration
   # Controls user permissions for MCP (Model Context Protocol) server management
@@ -41,6 +42,23 @@ endpoints:
 
   google:
     fetch: true
+
+# Use GPT-5.6 for every new chat while keeping the configured providers
+# available in the model selector.
+modelSpecs:
+  prioritize: true
+  addedEndpoints:
+    - openAI
+    - anthropic
+    - google
+    - agents
+  list:
+    - name: gpt-5.6
+      label: GPT-5.6
+      default: true
+      preset:
+        endpoint: openAI
+        model: gpt-5.6
 
 mcpSettings:
   allowedDomains:
