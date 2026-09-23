@@ -30,6 +30,16 @@ jobs:
       - name: Generate .env
         run: bash scripts/generate-env.sh
 
+      - name: Validate Langfuse v4 services
+        run: |
+          docker compose config --format json | jq -e '
+            .services["langfuse-web"].image == "docker.langfuse.com/langfuse/langfuse:4" and
+            .services["langfuse-worker"].image == "docker.langfuse.com/langfuse/langfuse-worker:4" and
+            .services.clickhouse.image == "docker.io/clickhouse/clickhouse-server:25.12" and
+            .services["langfuse-web"].environment.LANGFUSE_S3_MEDIA_UPLOAD_INTERNAL_ENDPOINT == "http://minio:9000" and
+            .services["langfuse-worker"].environment.LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT == "http://minio:9000"
+          '
+
       # --wait blocks until every healthchecked service is healthy and the rest
       # are running; it fails if any service is unhealthy or a one-shot exits
       # non-zero. This is the core "comes up cleanly" assertion.
