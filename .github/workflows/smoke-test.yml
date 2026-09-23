@@ -30,6 +30,13 @@ jobs:
       - name: Generate .env
         run: bash scripts/generate-env.sh
 
+      - name: Validate Admin Panel auth defaults
+        run: |
+          docker compose config --format json | jq -e '
+            .services["admin-panel"].environment.ADMIN_SSO_ENABLED == "false" and
+            .services["admin-panel"].environment.SESSION_COOKIE_SECURE == "false"
+          '
+
       # --wait blocks until every healthchecked service is healthy and the rest
       # are running; it fails if any service is unhealthy or a one-shot exits
       # non-zero. This is the core "comes up cleanly" assertion.

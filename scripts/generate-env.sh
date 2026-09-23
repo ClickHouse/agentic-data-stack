@@ -47,6 +47,8 @@ JWT_REFRESH_SECRET=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
 # Generate Admin Panel session secret (must be at least 32 chars)
 ADMIN_PANEL_PORT=${ADMIN_PANEL_PORT:-3081}
 ADMIN_PANEL_SESSION_SECRET=$(openssl rand -hex 32)
+ADMIN_SSO_ENABLED=${ADMIN_SSO_ENABLED:-false}
+ADMIN_SESSION_COOKIE_SECURE=${ADMIN_SESSION_COOKIE_SECURE:-false}
 
 # # Prompt for user email or use default
 # read -p "Enter initial Langfuse user email (default: admin@example.com): " USER_EMAIL
@@ -197,6 +199,8 @@ OPENAI_API_KEY=user_provided
 # ============================================
 ADMIN_PANEL_PORT=${ADMIN_PANEL_PORT}
 ADMIN_PANEL_SESSION_SECRET=${ADMIN_PANEL_SESSION_SECRET}
+ADMIN_SSO_ENABLED=${ADMIN_SSO_ENABLED}
+ADMIN_SESSION_COOKIE_SECURE=${ADMIN_SESSION_COOKIE_SECURE}
 
 EOF
 

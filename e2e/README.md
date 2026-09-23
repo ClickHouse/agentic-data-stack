@@ -4,7 +4,8 @@ Browser-level Playwright tests that verify the stack actually **works** — not
 just that it boots (that's the job of the smoke test in
 `.github/workflows/smoke-test.yml`). They cover the real user flows: login, an
 agent chat that queries **ClickHouse via the real MCP server**, **Langfuse trace
-creation**, and the **feedback → Langfuse score** path.
+creation**, the **feedback → Langfuse score** path, and an Admin Panel login
+whose session persists over the local HTTP connection.
 
 Runs **daily + manual only** (`.github/workflows/e2e.yml`), never on PRs.
 
@@ -32,7 +33,7 @@ LibreChat sends the tool result back — emits a final answer echoing it.
 | `lib/langfuse.ts` | Langfuse public-API client that **polls** (ingestion is async). |
 | `lib/librechat.ts` | Shared chat-driving helpers. |
 | `setup/auth.setup.ts` | Logs in once via `POST /api/auth/login`, saves storage state. |
-| `specs/*.spec.ts` | `librechat`, `langfuse`, `roundtrip`, `scoring`. |
+| `specs/*.spec.ts` | `admin-panel`, `librechat`, `langfuse`, `roundtrip`, `scoring`. |
 
 ## Run locally
 
