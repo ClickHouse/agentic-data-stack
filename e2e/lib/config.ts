@@ -45,6 +45,7 @@ const required = (key: string, fallback?: string): string => {
 
 export const config = {
   librechatBaseUrl: required("LIBRECHAT_HOST_URL", "http://localhost:3080"),
+  adminPanelBaseUrl: required("ADMIN_PANEL_HOST_URL", "http://localhost:3081"),
   langfuseBaseUrl: required("LANGFUSE_HOST_URL", "http://localhost:3000"),
 
   login: {
