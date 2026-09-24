@@ -121,6 +121,7 @@ LibreChat connects to ClickHouse through the MCP server, allowing AI agents to q
 
 - **LibreChat** — `librechat.yaml` configures endpoints, MCP servers, and agent capabilities. The Admin Panel ([http://localhost:3081](http://localhost:3081)) offers a browser-based alternative for most of these settings.
 - **Environment** — `.env` holds all credentials and service configuration (see `.env.example` for reference).
+- **Admin Panel authentication** — Local HTTP uses password login with SSO disabled and non-Secure session cookies. Set `ADMIN_SSO_ENABLED=true` after configuring LibreChat OpenID, and set `ADMIN_SESSION_COOKIE_SECURE=true` whenever the Admin Panel is served over HTTPS.
 - **Docker** — `docker-compose.yml` includes the four compose files:
   - `langfuse-compose.yml` — Langfuse, ClickHouse, PostgreSQL, Redis, MinIO
   - `clickhouse-mcp-compose.yml` — ClickHouse MCP server
