@@ -157,15 +157,16 @@ fi
 # (generated before LANGFUSE_PUBLIC_KEY / SECRET_KEY / BASE_URL were split out)
 # only have the LANGFUSE_INIT_PROJECT_* values; default the new keys to the
 # local Langfuse stack so the "local" choice keeps working untouched.
+init_pub=$(grep -E "^LANGFUSE_INIT_PROJECT_PUBLIC_KEY=" "$ENV_FILE" | head -n1 | cut -d= -f2-)
+init_sec=$(grep -E "^LANGFUSE_INIT_PROJECT_SECRET_KEY=" "$ENV_FILE" | head -n1 | cut -d= -f2-)
+
 if ! grep -q "^LANGFUSE_BASE_URL=" "$ENV_FILE"; then
     set_env_var "LANGFUSE_BASE_URL" "http://langfuse-web:3000"
 fi
 if ! grep -q "^LANGFUSE_PUBLIC_KEY=" "$ENV_FILE"; then
-    init_pub=$(grep -E "^LANGFUSE_INIT_PROJECT_PUBLIC_KEY=" "$ENV_FILE" | head -n1 | cut -d= -f2-)
     set_env_var "LANGFUSE_PUBLIC_KEY" "${init_pub}"
 fi
 if ! grep -q "^LANGFUSE_SECRET_KEY=" "$ENV_FILE"; then
-    init_sec=$(grep -E "^LANGFUSE_INIT_PROJECT_SECRET_KEY=" "$ENV_FILE" | head -n1 | cut -d= -f2-)
     set_env_var "LANGFUSE_SECRET_KEY" "${init_sec}"
 fi
 
@@ -233,6 +234,13 @@ if [ "$LANGFUSE_TARGET" = "cloud" ]; then
 
     echo "  ✓ LibreChat will send traces to ${langfuse_base_url}"
 else
+    # A previous run may have configured a remote project. Selecting local
+    # must actively restore all three values rather than leaving stale Cloud
+    # credentials in place while reporting that traces will stay local.
+    set_env_var "LANGFUSE_BASE_URL" "http://langfuse-web:3000"
+    set_env_var "LANGFUSE_PUBLIC_KEY" "$init_pub"
+    set_env_var "LANGFUSE_SECRET_KEY" "$init_sec"
+
     echo "  ✓ LibreChat will send traces to the local Langfuse stack."
 fi
 
