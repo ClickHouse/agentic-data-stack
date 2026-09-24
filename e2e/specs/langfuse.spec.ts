@@ -5,7 +5,7 @@ import { config } from "../lib/config";
  * Langfuse is up and the headless-initialized user + project exist. Langfuse is
  * a DIFFERENT origin from LibreChat, so the shared storage state doesn't apply —
  * we sign in through Langfuse's own form using the seeded init-user credentials,
- * then confirm the Default Project's dashboard and Traces view load.
+ * then confirm the Default Project's dashboard and Tracing view load.
  *
  * We navigate with absolute Langfuse URLs rather than overriding `baseURL` via
  * top-level `test.use()`: that override is brittle across Playwright loader
@@ -31,11 +31,11 @@ test.describe("Langfuse UI", () => {
     await expect(page.getByText(config.langfuse.projectName, { exact: false }).first()).toBeVisible();
   });
 
-  test("Traces view loads", async ({ page }) => {
+  test("Tracing view loads", async ({ page }) => {
     await page.goto(`${LF}/project/${config.langfuse.projectId}/traces`);
-    // The page heading reads "Tracing"; "Traces" is the (already active) nav
-    // link beneath it, not a heading.
+    // Langfuse v4 renamed both the page heading and navigation item to
+    // "Tracing" while retaining the /traces route.
     await expect(page.getByRole("heading", { name: /tracing/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Traces", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Tracing", exact: true })).toBeVisible();
   });
 });
