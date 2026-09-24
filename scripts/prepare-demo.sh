@@ -72,7 +72,7 @@ multiselect() {
             else
                 print_inactive "$prefix" "$option"
             fi
-            ((idx++))
+            idx=$((idx + 1))
         done
 
         case $(key_input) in
@@ -84,8 +84,12 @@ multiselect() {
                 fi
                 ;;
             enter)  break;;
-            up)     ((active--)); if [ $active -lt 0 ]; then active=$((${#options[@]} - 1)); fi;;
-            down)   ((active++)); if [ $active -ge ${#options[@]} ]; then active=0; fi;;
+            up)     
+                active=$((active - 1)); 
+                if [ $active -lt 0 ]; then active=$((${#options[@]} - 1)); fi;;
+            down)   
+                active=$((active + 1));  
+                if [ $active -ge ${#options[@]} ]; then active=0; fi;;
             ctrlc)  cursor_blink_on; printf "\n"; exit 130;;
         esac
     done
