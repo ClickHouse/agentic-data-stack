@@ -53,6 +53,30 @@ jobs:
       - name: Launch stack and wait for health
         run: docker compose up -d --wait --wait-timeout 600
 
+      - name: Validate running Langfuse target reconciliation
+        run: |
+          set -euo pipefail
+
+          cp .env .env.local-fixture
+          restore_env() { mv .env.local-fixture .env; }
+          trap restore_env EXIT
+
+          sed -i 's|^LANGFUSE_BASE_URL=.*|LANGFUSE_BASE_URL=https://us.cloud.langfuse.com/|' .env
+          sed -i 's|^LANGFUSE_PUBLIC_KEY=.*|LANGFUSE_PUBLIC_KEY=pk-lf-cloud-fixture|' .env
+          sed -i 's|^LANGFUSE_SECRET_KEY=.*|LANGFUSE_SECRET_KEY=sk-lf-cloud-fixture|' .env
+          docker compose up -d --force-recreate --no-deps --wait --wait-timeout 300 librechat
+          test "$(docker compose exec -T librechat printenv LANGFUSE_BASE_URL | tr -d '\r')" = "https://us.cloud.langfuse.com/"
+
+          restore_env
+          trap - EXIT
+          bash scripts/reconcile-demo-runtime.sh
+
+          for key in LANGFUSE_BASE_URL LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY; do
+            expected="$(grep -E "^${key}=" .env | head -n1 | cut -d= -f2-)"
+            actual="$(docker compose exec -T librechat printenv "$key" | tr -d '\r')"
+            test "$actual" = "$expected"
+          done
+
       - name: Probe service endpoints
         run: |
           set -euo pipefail
