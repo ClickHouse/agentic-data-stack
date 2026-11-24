@@ -129,6 +129,10 @@ LibreChat connects to ClickHouse through the MCP server, allowing AI agents to q
   - `librechat-compose.yml` — LibreChat, MongoDB, Meilisearch, pgvector, RAG API
   - `admin-panel-compose.yml` — LibreChat Admin Panel
 
+## Add shared agent memory
+
+Connect a separate [ClickHouse Loom](https://github.com/ClickHouse/loom) deployment through LibreChat to search stored team decisions and documents alongside the stack’s SQL tools. Follow the [Loom configuration guide for LibreChat](https://github.com/ClickHouse/loom/blob/v1.3.0/docs/features/integrations/librechat.md#how-a-call-reaches-loom) to add the Streamable HTTP endpoint. Set up a separate Loom viewer token for each person so requests use their existing namespace access.
+
 ## Reset Everything
 
 To tear down all containers and delete all data:
